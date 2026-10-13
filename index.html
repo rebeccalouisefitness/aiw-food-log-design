@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Wellness · Food Log design (AIW-308)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── CUSTOMER tokens: aiw-cust-v254 src/theme/tokens.ts ── */
+:root{
+  --bone:#f8f6f2; --boneSoft:#fcfaf6; --card:#fff; --hover:#f3efe7; --line:#e8e2d4; --lineSoft:#f0eadc;
+  --ink:#1d2438; --navyCard:#1d3045; --inkSoft:#525a72; --mute:#9c9787;
+  --orange:#F26B1D; --tan:#a07c4f; --bronzeDeep:#7d5e34; --bronzeSoft:#c9a47a; --cream:#ead7b8;
+  --sage:#5a7a5e; --terra:#9c5f47; --steel:#3F6177; --ringTrack:#efe6d5;
+  --purple:#8B7DB0; --sageFill:#E7EFE6; --tanFill:#F3E7D8; --purpleFill:#EFEDF4; --water:#5A8FB0; --waterSoft:#E3EDF3; --waterFill:#E8EFF4;
+  --err:#B4523E;
+  /* ── COACH tokens: aiw-distributor-native app/client/[id].tsx CD + tokens.ts ── */
+  --cdCream:#FBF8F3; --cdBorder:#E8E1D4; --cdNavy:#0D2842; --cdNavy2:#1A3A5C; --cdRust:#B06033; --cdTan:#C8956C;
+  --cdInk:#1A1410; --cdBody:#4A4239; --cdMeta:#9A8F80; --cdSage:#5A7A5E; --cdSageFill:#E7EFE6; --cdBlue:#5A8FB0; --cdBlueFill:#E6EFF4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:#ebe6dc;color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+input{font:inherit}
+/* ── page chrome (outside the phone) ── */
+.top{position:sticky;top:0;z-index:20;background:#1d2438;color:#fff;padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.top h1{font-family:Fraunces,serif;font-weight:600;font-size:19px;letter-spacing:-.2px}
+.top h1 small{display:block;font-family:Inter;font-weight:500;font-size:11.5px;color:#ead7b8;letter-spacing:.2px;margin-top:2px}
+.modes{display:flex;gap:6px;flex-wrap:wrap}
+.modes button{padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:600;font-size:13px}
+.modes button.on{background:#fff;color:#1d2438;border-color:#fff}
+.stage{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:26px 16px 60px;flex-wrap:wrap}
+.rail{width:250px;display:flex;flex-direction:column;gap:6px}
+.rail h3{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:#7d5e34;font-weight:800;margin:6px 0 2px}
+.rail button{text-align:left;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e8e2d4;font-size:13px;font-weight:600;color:#1d2438}
+.rail button.on{background:#1d2438;color:#fff;border-color:#1d2438}
+.rail button span{display:block;font-weight:400;font-size:11.5px;color:#9c9787;margin-top:2px}
+.rail button.on span{color:#ead7b8}
+.notes{width:300px;background:#fff;border:1px solid #e8e2d4;border-radius:16px;padding:16px 16px 18px;font-size:12.5px;line-height:1.55;color:#525a72}
+.notes h4{font-family:Fraunces,serif;font-weight:600;font-size:16px;color:#1d2438;margin-bottom:6px}
+.notes b{color:#1d2438}
+.notes ul{padding-left:16px;margin-top:6px}
+.notes li{margin-bottom:5px}
+.notes .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--tanFill);color:var(--bronzeDeep);margin-bottom:8px}
+/* ── phone ── */
+.phone{width:390px;height:844px;border-radius:46px;background:#111;padding:10px;box-shadow:0 30px 60px rgba(29,36,56,.25);flex:0 0 auto}
+.screen{width:370px;height:824px;border-radius:38px;overflow:hidden;position:relative;background:var(--bone)}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-weight:600;font-size:14px}
+.scroll{position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+/* customer components (values copied from app/food-log.tsx styles) */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:4px 20px 0}
+.back{width:30px;height:30px;display:flex;align-items:center}
+.titleRow{display:flex;align-items:baseline;justify-content:space-between;padding:10px 20px 10px}
+.topTitle{font-family:Fraunces,serif;font-weight:500;font-size:24px;letter-spacing:-.3px;color:var(--ink)}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-weight:800;font-size:14px;line-height:19px;color:var(--ink)}
+.pill.done{background:var(--sage);border-color:var(--sage);color:#fff}
+.strip{display:flex;gap:6px;margin:4px 20px 14px;overflow-x:auto;scrollbar-width:none}
+.chip{flex:0 0 42px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:9px 0;text-align:center}
+.chip .d{font-weight:700;font-size:8.5px;line-height:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--mute)}
+.chip .n{font-weight:800;font-size:13px;line-height:19px;margin-top:2px}
+.chip.sent{background:var(--sageFill);border-color:#CBDDCC}
+.chip.part{background:var(--tanFill);border-color:var(--bronzeSoft)}
+.chip.on{background:var(--ink);border-color:var(--ink)} .chip.on .d{color:var(--cream)} .chip.on .n{color:#fff}
+.chip.fut{opacity:.42}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;margin:0 20px 12px;padding:14px 16px}
+.kicker{font-weight:800;font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--tan)}
+.sub{font-size:12.5px;color:var(--inkSoft)}
+.mute{color:var(--mute)}
+/* summary */
+.sumTop{display:flex;align-items:center;gap:16px}
+.ring{position:relative;width:104px;height:104px;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .big{font-weight:800;font-size:22px;line-height:24px}
+.ring .lbl{font-size:10.5px;color:var(--mute);margin-top:2px}
+.eq{flex:1;font-size:12px;color:var(--inkSoft)}
+.eq .r{display:flex;justify-content:space-between;padding:3px 0}
+.eq .r b{color:var(--ink);font-weight:700}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.mac .t{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--ink)}
+.mac .t span{color:var(--mute);font-weight:500}
+.bar{height:6px;border-radius:6px;background:var(--ringTrack);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+/* meal cards */
+.meal{background:#fff;border:1px solid var(--line);border-radius:20px;margin:0 20px 12px;overflow:hidden}
+.mealHd{display:flex;justify-content:space-between;align-items:center;padding:13px 16px 9px}
+.mealHd .kcal{font-weight:800;font-size:13px}
+.item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--lineSoft)}
+.item .ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.item .tx{flex:1;min-width:0}
+.item .nm{font-weight:600;font-size:13.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .sv{font-size:11.5px;color:var(--mute);line-height:16px}
+.item .k{font-weight:700;font-size:13px}
+.item .x{color:var(--mute);font-size:16px;padding:0 0 0 4px}
+.photoRow{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--lineSoft)}
+.ph{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#c9a47a,#7d5e34);position:relative;overflow:hidden}
+.ph:after{content:"";position:absolute;left:12px;top:16px;width:40px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#e7efe6,#5a7a5e 60%,#3e5a42)}
+.addRow{display:flex;gap:8px;padding:10px 16px 13px;border-top:1px solid var(--lineSoft)}
+.addBtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:9px 0;font-weight:700;font-size:13px;color:var(--ink);background:#fff}
+.addBtn.main{background:var(--ink);border-color:var(--ink);color:#fff}
+.iconBtn{width:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;background:#fff}
+/* water */
+.waterRow{display:flex;align-items:center;justify-content:space-between}
+.glasses{display:flex;gap:5px;margin-top:10px}
+.glass{width:26px;height:32px;border-radius:4px 4px 8px 8px;border:1.5px solid var(--water);background:var(--waterSoft);position:relative;overflow:hidden}
+.glass.f:after{content:"";position:absolute;left:0;right:0;bottom:0;height:78%;background:var(--water)}
+.wCtl{display:flex;align-items:center;gap:12px}
+.wBtn{width:34px;height:34px;border-radius:17px;background:var(--bone);border:1px solid var(--water);color:var(--water);font-weight:700;font-size:18px;line-height:21px}
+.wVal{font-weight:800;font-size:19px;min-width:26px;text-align:center}
+/* CTAs */
+.cta{display:flex;align-items:center;justify-content:center;gap:9px;background:var(--tan);border-radius:16px;padding:16px 0;margin:10px 20px 0;color:#fff;font-weight:800;font-size:14px;width:calc(100% - 40px)}
+.cta.sent{background:var(--sage)}
+.saveBtn{margin:10px 20px 0;border-radius:16px;border:1.5px solid var(--line);background:#fff;padding:14px 0;text-align:center;font-weight:700;font-size:14px;width:calc(100% - 40px)}
+.hint{font-size:11px;color:var(--mute);text-align:center;margin:9px 20px 0;line-height:15px}
+/* sheet */
+.sheetHd{display:flex;align-items:center;justify-content:space-between;padding:4px 20px 6px}
+.search{margin:6px 20px 12px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 14px}
+.search input{border:0;outline:0;flex:1;font-size:14px;color:var(--ink);background:transparent}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 20px 14px}
+.tool{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 6px 10px;text-align:center;font-weight:700;font-size:12px}
+.tool .ti{width:34px;height:34px;border-radius:10px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+.segs{display:flex;gap:18px;margin:0 20px 10px;border-bottom:1px solid var(--line)}
+.segs button{padding:0 0 9px;font-weight:600;font-size:13px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.segs button.on{color:var(--ink);font-weight:700;border-color:var(--ink)}
+.list{background:#fff;border:1px solid var(--line);border-radius:20px;margin:0 20px 12px;overflow:hidden}
+.list .item:first-child{border-top:0}
+.plus{width:30px;height:30px;border-radius:15px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink);font-weight:700;font-size:17px;flex:0 0 auto}
+.plus.ok{background:var(--sage);border-color:var(--sage);color:#fff;font-size:13px}
+.heart{font-size:15px;color:var(--mute);padding:0 4px}
+.heart.on{color:var(--terra)}
+/* detail */
+.big2{font-family:Fraunces,serif;font-weight:500;font-size:22px;letter-spacing:-.2px;line-height:28px}
+.field{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-top:1px solid var(--lineSoft)}
+.field:first-child{border-top:0}
+.field label{font-size:13px;color:var(--inkSoft)}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.opt{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;line-height:19px}
+.opt.on{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:700}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:32px;height:32px;border-radius:16px;border:1px solid var(--line);background:var(--bone);font-weight:700;font-size:17px}
+.mGrid{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;gap:6px}
+.mGrid .v{font-weight:800;font-size:18px}
+.mGrid .l{font-size:10.5px;color:var(--mute);margin-top:2px}
+.slotPick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+/* scanner */
+.cam{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#3b3a36,#141412 70%)}
+.reticle{position:absolute;left:50%;top:300px;width:250px;height:150px;transform:translateX(-50%);border-radius:18px;box-shadow:0 0 0 2000px rgba(0,0,0,.35)}
+.reticle:before,.reticle:after{content:"";position:absolute;inset:0;border-radius:18px;border:3px solid #fff;clip-path:polygon(0 0,22% 0,22% 100%,0 100%,0 0,100% 0,100% 100%,78% 100%,78% 0)}
+.laser{position:absolute;left:14px;right:14px;top:50%;height:2px;background:var(--orange);box-shadow:0 0 12px var(--orange);animation:las 1.8s ease-in-out infinite}
+@keyframes las{0%,100%{transform:translateY(-55px)}50%{transform:translateY(55px)}}
+.barcode{position:absolute;left:50%;top:335px;transform:translateX(-50%);width:170px;height:80px;background:repeating-linear-gradient(90deg,#f5f2ea 0 3px,#222 3px 5px,#f5f2ea 5px 7px,#222 7px 11px,#f5f2ea 11px 12px,#222 12px 13px);border-radius:4px;opacity:.85}
+.camTop{position:absolute;top:44px;left:0;right:0;display:flex;justify-content:space-between;padding:8px 20px;color:#fff}
+.camTxt{position:absolute;top:480px;left:0;right:0;text-align:center;color:#fff;font-size:13.5px}
+.found{position:absolute;left:12px;right:12px;bottom:18px;background:#fff;border-radius:22px;padding:16px}
+/* bottom tab bar (customer) */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:78px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-top:10px}
+.tabbar div{text-align:center;font-weight:700;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink)}
+.tabbar div.on{color:var(--orange)}
+.tabbar svg{display:block;margin:0 auto 4px}
+/* progress */
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px;margin-top:14px;position:relative}
+.bars .col{flex:1;text-align:center;font-size:10px;color:var(--mute);font-weight:700}
+.bars .b{border-radius:8px 8px 4px 4px;margin:0 auto 6px;width:100%}
+.goalLine{position:absolute;left:0;right:0;border-top:1.5px dashed var(--tan)}
+.goalLine span{position:absolute;right:0;top:-16px;font-size:10px;color:var(--tan);font-weight:700}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px 12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 14px}
+.stat .v{font-weight:800;font-size:22px;margin-top:4px}
+.stat .s{font-size:11.5px;color:var(--mute)}
+/* quick add form */
+.qf{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--lineSoft)}
+.qf:first-child{border-top:0}
+.qf input{width:90px;text-align:right;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-weight:700;font-size:15px;color:var(--ink);background:var(--boneSoft);outline:0}
+/* toast */
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:600;font-size:13px;padding:10px 16px;border-radius:999px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+/* ── COACH skin ── */
+.coach{font-family:Inter}
+.coach .screen{background:var(--cdCream)}
+.cTitle{font-family:"Plus Jakarta Sans";font-weight:800;font-size:24px;color:var(--cdInk);letter-spacing:-.3px}
+.hero{display:flex;gap:12px;align-items:center;padding:6px 20px 14px}
+.av{width:52px;height:52px;border-radius:26px;background:linear-gradient(135deg,#C8956C,#B06033);color:#fff;font-family:"Plus Jakarta Sans";font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+.ctTabs{display:flex;justify-content:space-between;margin:0 20px 16px;border-bottom:1px solid var(--cdBorder)}
+.ctTabs button{font-weight:600;font-size:13px;line-height:18px;color:var(--cdMeta);padding-bottom:9px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.ctTabs button.on{font-weight:700;color:var(--cdNavy);border-color:var(--cdNavy)}
+.cCard{background:#fff;border:1px solid var(--cdBorder);border-radius:16px;margin:0 20px 12px;padding:14px 16px}
+.cLbl{font-weight:800;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cdNavy)}
+.cMeta{font-size:12px;color:var(--cdMeta)}
+.flag{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid #F1ECE2}
+.flag:first-of-type{border-top:0}
+.flag .dot{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:13px}
+.flag .ft{flex:1;font-size:13px;color:var(--cdInk);line-height:18px}
+.flag .ft small{display:block;color:var(--cdMeta);font-size:11.5px}
+.nudge{border:1px solid var(--cdBorder);border-radius:999px;padding:6px 11px;font-weight:700;font-size:12px;color:var(--cdNavy);background:#fff;white-space:nowrap}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.wd{border-radius:10px;padding:7px 0;text-align:center;border:1px solid var(--cdBorder);background:#fff}
+.wd .d{font-size:8.5px;font-weight:700;letter-spacing:.4px;color:var(--cdMeta);text-transform:uppercase}
+.wd .n{font-weight:800;font-size:13px;color:var(--cdInk)}
+.wd.g{background:var(--cdSageFill);border-color:#CBDDCC}
+.wd.a{background:#F3E7D8;border-color:#c9a47a}
+.wd.on{background:var(--cdNavy);border-color:var(--cdNavy)} .wd.on .d{color:#F0E6D6} .wd.on .n{color:#fff}
+.cBtn{display:block;width:calc(100% - 40px);margin:4px 20px 0;background:var(--cdNavy);color:#fff;border-radius:14px;padding:14px 0;font-weight:800;font-size:14px;text-align:center}
+.cBtn.ghost{background:#fff;color:var(--cdNavy);border:1.5px solid var(--cdBorder);margin-top:10px}
+.cliRow{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #F1ECE2}
+.cliRow:first-of-type{border-top:0}
+.cliRow .av{width:40px;height:40px;font-size:14px}
+.mini{display:flex;gap:3px;margin-top:5px}
+.mini i{width:14px;height:6px;border-radius:3px;background:#EFE6D5}
+.mini i.g{background:var(--cdSage)} .mini i.a{background:var(--cdTan)}
+.badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px}
+.coachTab{position:absolute;left:0;right:0;bottom:0;height:78px;background:#fff;border-top:1px solid var(--cdBorder);display:flex;justify-content:space-around;padding-top:12px}
+.coachTab div{font-weight:700;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#1F2937;text-align:center}
+.coachTab div.on{color:var(--orange)}
+.cIn{width:100%;border:1px solid var(--cdBorder);border-radius:12px;padding:11px 12px;font-size:13.5px;color:var(--cdInk);background:var(--cdCream);outline:0;margin-top:10px}
+/* ── doc mode ── */
+.doc{max-width:860px;margin:26px auto 80px;background:#fff;border:1px solid #e8e2d4;border-radius:20px;padding:34px 40px;line-height:1.6;font-size:14px;color:#3a4156}
+.doc h2{font-family:Fraunces,serif;font-weight:600;font-size:26px;color:#1d2438;margin-bottom:4px}
+.doc h3{font-family:Fraunces,serif;font-weight:600;font-size:19px;color:#1d2438;margin:28px 0 8px}
+.doc p{margin:8px 0}
+.doc ul,.doc ol{padding-left:20px;margin:6px 0}
+.doc li{margin:4px 0}
+.doc table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px}
+.doc th,.doc td{border:1px solid #e8e2d4;padding:8px 9px;text-align:left;vertical-align:top}
+.doc th{background:#f8f6f2;font-weight:700;color:#1d2438}
+.doc code,.doc pre{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.doc code{background:#f3efe7;padding:1px 5px;border-radius:5px}
+.doc pre{background:#1d2438;color:#ead7b8;padding:14px 16px;border-radius:12px;overflow:auto;line-height:1.5;margin:10px 0}
+.doc .rec{background:#E7EFE6;border:1px solid #CBDDCC;border-radius:12px;padding:12px 14px;margin:10px 0}
+.doc .warn{background:#F3E7D8;border:1px solid #c9a47a;border-radius:12px;padding:12px 14px;margin:10px 0}
+.dec{counter-reset:d;list-style:none;padding:0!important}
+.dec li{background:#fcfaf6;border:1px solid #e8e2d4;border-radius:14px;padding:13px 16px 13px 50px;position:relative;margin:10px 0}
+.dec li:before{counter-increment:d;content:counter(d);position:absolute;left:14px;top:13px;width:24px;height:24px;border-radius:12px;background:#1d2438;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+.dec b{color:#1d2438}
+@media (max-width:1000px){.rail{width:390px;flex-direction:row;flex-wrap:wrap}.rail h3{width:100%}.rail button{flex:1 1 45%}.notes{width:390px}}
+@media (max-width:420px){.phone{transform:scale(.92);transform-origin:top center;margin-bottom:-60px}.doc{padding:22px 18px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Food Log — design for approval<small>AIW-308 · DESIGN ONLY, nothing built in the apps · customer app styles from live v254, coach styles from live v849</small></h1>
+  <div class="modes" id="modes">
+    <button data-m="customer" class="on">Customer app</button>
+    <button data-m="coach">Coach app</button>
+    <button data-m="plan">Back-end plan</button>
+    <button data-m="decide">Your decisions</button>
+  </div>
+</div>
+<div id="stageWrap"></div>
+
+<script>
+/* ═══════════════════════ DATA ═══════════════════════ */
+const SLOTS=[['breakfast','Breakfast'],['snack_am','Snack'],['lunch','Lunch'],['snack_pm','Snack'],['dinner','Dinner']];
+const T={kcal:1600,p:110,c:160,f:55,water:8};
+/* Example values only — real values come from the per-country Herbalife catalogue */
+const FOODS=[
+ {id:'f1',n:'Formula 1 Shake · Cookies & Cream',b:'Herbalife',hl:1,ic:'shake',sv:[['1 serving (26 g) + 250 ml semi-skimmed milk',1],['1 serving (26 g) + 250 ml soy milk',0.97],['1 serving (26 g) + water',0.45]],k:223,p:17,c:22,f:7},
+ {id:'pdm',n:'Protein Drink Mix',b:'Herbalife',hl:1,ic:'protein',sv:[['1 scoop (14 g)',0.5],['2 scoops (28 g)',1]],k:104,p:15,c:8,f:1},
+ {id:'tea',n:'Herbal Tea Concentrate',b:'Herbalife',hl:1,ic:'tea',sv:[['½ tsp (0.85 g) in water',1]],k:6,p:0,c:1,f:0},
+ {id:'aloe',n:'Herbal Aloe Concentrate',b:'Herbalife',hl:1,ic:'aloe',sv:[['3 caps (15 ml) in water',1]],k:6,p:0,c:1,f:0},
+ {id:'bar',n:'Protein Bar · Vanilla Almond',b:'Herbalife',hl:1,ic:'bar',sv:[['1 bar (35 g)',1]],k:140,p:10,c:14,f:5},
+ {id:'f1bar',n:'Formula 1 Express Bar',b:'Herbalife',hl:1,ic:'bar',sv:[['1 bar (56 g)',1]],k:207,p:11,c:22,f:7},
+ {id:'yog',n:'Greek yoghurt, 0% fat',b:'',ic:'food',sv:[['150 g',1],['100 g',.667],['1 cup (245 g)',1.633]],k:86,p:15,c:6,f:0},
+ {id:'chk',n:'Chicken breast, grilled',b:'',ic:'food',sv:[['120 g',1],['100 g',.833],['1 breast (172 g)',1.433]],k:198,p:37,c:0,f:4},
+ {id:'sal',n:'Mixed salad leaves',b:'',ic:'food',sv:[['1 bowl (85 g)',1]],k:17,p:1,c:3,f:0},
+ {id:'oil',n:'Olive oil',b:'',ic:'food',sv:[['1 tbsp (14 g)',1],['1 tsp (5 g)',.357]],k:119,p:0,c:0,f:14},
+ {id:'egg',n:'Egg, boiled',b:'',ic:'food',sv:[['1 large (50 g)',1],['2 large (100 g)',2]],k:78,p:6,c:1,f:5},
+ {id:'rice',n:'Brown rice, cooked',b:'',ic:'food',sv:[['½ cup (98 g)',1],['1 cup (195 g)',2]],k:108,p:3,c:22,f:1},
+ {id:'salm',n:'Salmon fillet, baked',b:'',ic:'food',sv:[['1 fillet (125 g)',1],['100 g',.8]],k:255,p:28,c:0,f:15},
+ {id:'brc',n:'Broccoli, steamed',b:'',ic:'food',sv:[['1 cup (90 g)',1]],k:31,p:3,c:6,f:0},
+ {id:'apl',n:'Apple, medium',b:'',ic:'food',sv:[['1 apple (182 g)',1]],k:95,p:0,c:25,f:0},
+ {id:'alm',n:'Almonds',b:'',ic:'food',sv:[['10 almonds (12 g)',1],['30 g',2.5]],k:70,p:3,c:2,f:6},
+ {id:'skyr',n:'Skyr Natural',b:'Ísey · barcode 5690527',ic:'food',sv:[['1 pot (150 g)',1]],k:95,p:17,c:6,f:0,bc:1},
+];
+const byId=id=>FOODS.find(f=>f.id===id);
+function mk(id,svi=0,qty=1){const f=byId(id),m=f.sv[svi][1]*qty;return{id,n:f.n,s:(qty!==1?qty+' × ':'')+f.sv[svi][0],k:Math.round(f.k*m),p:Math.round(f.p*m),c:Math.round(f.c*m),f:Math.round(f.f*m),hl:f.hl,ic:f.ic}}
+let S={
+  mode:'customer', scr:'diary', coachScr:'detail', slot:'lunch', food:'chk', svi:0, qty:1, seg:'recent', q:'', water:5,
+  sent:false, photo:{lunch:true}, fav:new Set(['f1','yog','chk']), justAdded:null,
+  day:{breakfast:[mk('f1'),mk('tea')],snack_am:[mk('yog')],lunch:[mk('chk'),mk('sal'),mk('oil')],snack_pm:[],dinner:[]},
+  targetsKcal:true,
+};
+const RECENT=['f1','tea','yog','chk','sal','oil','egg','pdm'];
+
+/* ═══════════════════════ ICONS ═══════════════════════ */
+const I={
+ back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d2438" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ close:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9c9787" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+ scan:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M8 9v6M11 9v6M14 9v6M17 9v6"/></svg>',
+ bolt:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg>',
+ cam:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+ shake:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a07c4f" stroke-width="2" stroke-linejoin="round"><path d="M7 7h10l-1.5 13h-7zM6 7h12M10 3l2 4"/></svg>',
+ protein:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a07c4f" stroke-width="2" stroke-linejoin="round"><rect x="7" y="5" width="10" height="15" rx="2"/><path d="M9 3h6v2H9zM7 10h10"/></svg>',
+ tea:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5a7a5e" stroke-width="2" stroke-linejoin="round"><path d="M5 9h11v5a5 5 0 01-5 5h-1a5 5 0 01-5-5zM16 11h1.5a2 2 0 010 4H16M9 3v3M12 3v3"/></svg>',
+ aloe:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5a7a5e" stroke-width="2" stroke-linejoin="round"><path d="M12 21V9M12 13c-3 0-5-3-5-7 3 0 5 3 5 7zM12 15c3 0 5-3 5-7-3 0-5 3-5 7z"/></svg>',
+ bar:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a07c4f" stroke-width="2" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="2"/><path d="M8 8v8M16 8v8"/></svg>',
+ food:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7d5e34" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 0016 0zM3 12h18M9 8c0-2 1-3 3-3"/></svg>',
+ send:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg>',
+ check:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+ chart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d2438" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>',
+};
+const icTile=k=>{const bg={shake:'var(--tanFill)',protein:'var(--tanFill)',bar:'var(--tanFill)',tea:'var(--sageFill)',aloe:'var(--sageFill)',food:'var(--lockedFill,#F5F0E7)'}[k]||'#F5F0E7';return `<div class="ic" style="background:${bg}">${I[k]||I.food}</div>`};
+const tabIcon=(n,c)=>({
+ today:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M4 11l8-7 8 7v9H4z"/></svg>`,
+ ch:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M8 4h8v5a4 4 0 01-8 0zM12 13v4M8 20h8"/></svg>`,
+ plan:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 9h6M9 13h6"/></svg>`,
+ chat:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>`,
+ you:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>`})[n];
+
+/* ═══════════════════════ HELPERS ═══════════════════════ */
+const sum=(arr,k)=>arr.reduce((a,b)=>a+b[k],0);
+const all=()=>SLOTS.flatMap(([s])=>S.day[s]);
+const tot=k=>sum(all(),k);
+const pct=(v,t)=>Math.max(0,Math.min(100,Math.round(v/t*100)));
+const slotLabel=s=>SLOTS.find(x=>x[0]===s)[1];
+function toast(msg){const t=document.querySelector('.toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1500)}
+const status=(dark)=>`<div class="status" style="${dark?'color:#fff;position:relative;z-index:3':''}"><span>9:41</span><span style="letter-spacing:2px">▪▪▪ ◔</span></div>`;
+
+/* ═══════════════════════ CUSTOMER SCREENS ═══════════════════════ */
+function ring(v,t,size=104,stroke=10,color='var(--sage)'){const r=(size-stroke)/2,C=2*Math.PI*r,p=Math.min(1,v/t);return `<svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--ringTrack)" stroke-width="${stroke}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}"/></svg>`}
+
+function scrDiary(){
+  const k=tot('k'),left=T.kcal-k;
+  const chips=[['Mon',12,'sent'],['Tue',13,'sent'],['Wed',14,'part'],['Thu',15,'sent'],['Fri',16,'sent'],['Sat',17,''],['Sun',18,'fut']];
+  const filled=SLOTS.filter(([s])=>S.day[s].length||(S.photo[s])).length;
+  return `${status()}<div class="scroll" id="sc">
+  <div class="hdr"><button class="back" onclick="toast('Back to Today')">${I.back}</button>
+   <button onclick="go('progress')" style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:var(--ink)">${I.chart}Progress</button></div>
+  <div class="titleRow"><div class="topTitle">Food diary</div><div class="pill ${S.sent?'done':''}">${S.sent?5:4}/7 days</div></div>
+  <div class="strip">${chips.map(([d,n,c],i)=>`<div class="chip ${i===5?'on':c}" ${i===5?'':`onclick="toast('Opens ${d} ${n}')"`}><div class="d">${d}</div><div class="n">${n}</div></div>`).join('')}</div>
+
+  <div class="card">
+   <div class="sumTop">
+    <div class="ring">${ring(k,T.kcal,104,10,left<0?'var(--terra)':'var(--sage)')}<div class="c"><div class="big">${Math.abs(left).toLocaleString()}</div><div class="lbl">${left<0?'kcal over':'kcal left'}</div></div></div>
+    <div class="eq"><div class="kicker" style="margin-bottom:6px">Today</div>
+     <div class="r"><span>Target</span><b>${T.kcal.toLocaleString()}</b></div>
+     <div class="r"><span>Food</span><b>${k.toLocaleString()}</b></div>
+     <div class="r" style="border-top:1px solid var(--lineSoft);margin-top:3px;padding-top:6px"><span>${left<0?'Over':'Remaining'}</span><b style="color:${left<0?'var(--terra)':'var(--sage)'}">${Math.abs(left).toLocaleString()}</b></div>
+    </div>
+   </div>
+   <div class="macros">
+    ${[['Protein','p',T.p,'var(--tan)'],['Carbs','c',T.c,'var(--water)'],['Fat','f',T.f,'var(--purple)']].map(([l,key,t,col])=>`<div class="mac"><div class="t">${l}<span>${tot(key)}/${t}g</span></div><div class="bar"><i style="width:${pct(tot(key),t)}%;background:${col}"></i></div></div>`).join('')}
+   </div>
+  </div>
+
+  ${SLOTS.map(([s,l])=>mealCard(s,l)).join('')}
+
+  <div class="card">
+   <div class="waterRow"><div><div class="kicker">Water</div><div class="sub" style="margin-top:3px">${S.water} of ${T.water} glasses</div></div>
+    <div class="wCtl"><button class="wBtn" onclick="S.water=Math.max(0,S.water-1);render()">−</button><div class="wVal">${S.water}</div><button class="wBtn" onclick="S.water=Math.min(12,S.water+1);render()">+</button></div></div>
+   <div class="glasses">${Array.from({length:T.water},(_,i)=>`<div class="glass ${i<S.water?'f':''}"></div>`).join('')}</div>
+  </div>
+
+  <button class="cta ${S.sent?'sent':''}" onclick="S.sent=!S.sent;render();toast(S.sent?'Sent to Coach Rebecca':'Unsent — still editable')">${S.sent?I.check+' Sent to my coach':I.send+' Send to my coach'}</button>
+  <div class="hint">${S.sent?'You can still add to today — your coach sees changes.':filled+' of 5 meals in. Your coach gets a notification when you send.'}</div>
+  <div style="height:36px"></div>
+  </div><div class="toast"></div>`;
+}
+function mealCard(s,l){
+  const it=S.day[s],k=sum(it,'k');
+  return `<div class="meal"><div class="mealHd"><div class="kicker">${l}</div><div class="kcal">${it.length?k+' <span class="mute" style="font-weight:500;font-size:11px">kcal</span>':'<span class="mute" style="font-weight:500;font-size:12px">Nothing yet</span>'}</div></div>
+  ${it.map((x,i)=>`<div class="item" ${S.justAdded===s+i?'style="background:var(--sageFill)"':''}>${icTile(x.ic)}<div class="tx"><div class="nm">${x.n}</div><div class="sv">${x.s} · P ${x.p}g</div></div><div class="k">${x.k}</div><button class="x" onclick="S.day['${s}'].splice(${i},1);render()" aria-label="Remove">×</button></div>`).join('')}
+  ${S.photo[s]?`<div class="photoRow"><div class="ph"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">Meal photo</div><div class="sv" style="font-size:11.5px;color:var(--mute)">Your coach can see this</div><button onclick="S.photo['${s}']=false;render()" style="margin-top:6px;font-size:12px;font-weight:700;color:var(--terra)">Remove photo</button></div></div>`:''}
+  <div class="addRow"><button class="addBtn main" onclick="S.slot='${s}';S.seg='recent';S.q='';go('add')">+ Add food</button>
+   <button class="iconBtn" title="Scan barcode" onclick="S.slot='${s}';go('scan')">${I.scan}</button>
+   <button class="iconBtn" title="Meal photo" onclick="S.photo['${s}']=true;render();toast('Photo added to ${l}')">${I.cam}</button></div></div>`;
+}
+
+function scrAdd(){
+  const q=S.q.trim().toLowerCase();
+  let list;
+  if(q) list=FOODS.filter(f=>f.n.toLowerCase().includes(q)||(f.b||'').toLowerCase().includes(q));
+  else if(S.seg==='recent') list=RECENT.map(byId);
+  else if(S.seg==='fav') list=[...S.fav].map(byId);
+  else if(S.seg==='hl') list=FOODS.filter(f=>f.hl);
+  else list=[];
+  return `${status()}<div class="scroll">
+  <div class="sheetHd"><button class="back" onclick="go('diary')">${I.back}</button><div style="font-weight:700;font-size:15px">Add to ${slotLabel(S.slot)}</div><div style="width:30px"></div></div>
+  <div class="search">${I.search}<input id="q" placeholder="Search foods, e.g. chicken, oats…" value="${S.q.replace(/"/g,'&quot;')}" oninput="S.q=this.value;renderKeep()"></div>
+  <div class="tools">
+   <button class="tool" onclick="go('scan')"><div class="ti" style="background:var(--waterFill);color:var(--water)">${I.scan}</div>Scan barcode</button>
+   <button class="tool" onclick="go('quick')"><div class="ti" style="background:var(--tanFill);color:var(--tan)">${I.bolt}</div>Quick add</button>
+   <button class="tool" onclick="S.photo[S.slot]=true;go('diary');setTimeout(()=>toast('Photo added to ${slotLabel(S.slot)}'),50)"><div class="ti" style="background:var(--sageFill);color:var(--sage)">${I.cam}</div>Meal photo</button>
+  </div>
+  ${q?`<div class="kicker" style="margin:0 20px 8px">${list.length} results</div>`:`<div class="segs">${[['recent','Recent'],['fav','Favourites'],['hl','Herbalife'],['meals','My meals']].map(([k,l])=>`<button class="${S.seg===k?'on':''}" onclick="S.seg='${k}';render()">${l}</button>`).join('')}</div>`}
+  ${S.seg==='hl'&&!q?`<div class="sub" style="margin:0 20px 10px">One tap adds your usual serving. Tap the name to change it.</div>`:''}
+  ${!q&&S.seg==='meals'?`<div class="list"><div class="item">${icTile('shake')}<div class="tx" onclick="addMeal()"><div class="nm">My usual breakfast</div><div class="sv">F1 shake + tea · 229 kcal · P 17g</div></div><button class="plus" onclick="addMeal()">+</button></div><div class="item">${icTile('food')}<div class="tx"><div class="nm">Chicken salad lunch</div><div class="sv">3 items · 334 kcal · P 38g</div></div><button class="plus" onclick="toast('Adds all 3 items')">+</button></div></div><div class="hint" style="margin-top:0">Save any meal as “My meal” from its ••• menu, then log it in one tap.</div>`:''}
+  ${list.length?`<div class="list">${list.map(f=>{const done=S.justAdded==='q'+f.id;return `<div class="item">${icTile(f.ic)}<div class="tx" onclick="S.food='${f.id}';S.svi=0;S.qty=1;go('detail')" style="cursor:pointer"><div class="nm">${f.n}</div><div class="sv">${f.sv[0][0]} · ${f.k} kcal · P ${f.p}g${f.hl?' · <b style="color:var(--tan)">Herbalife</b>':''}</div></div><button class="heart ${S.fav.has(f.id)?'on':''}" onclick="fav('${f.id}')">${S.fav.has(f.id)?'♥':'♡'}</button><button class="plus ${done?'ok':''}" onclick="quickAdd('${f.id}')">${done?'✓':'+'}</button></div>`}).join('')}</div>`:(q?`<div class="card" style="text-align:center"><div style="font-weight:700">No match for “${S.q}”</div><div class="sub" style="margin-top:4px">Try fewer words, scan the barcode, or</div><button class="addBtn" style="margin-top:10px;width:100%" onclick="go('quick')">Quick add calories</button></div>`:'')}
+  ${S.seg==='recent'&&!q?`<div class="hint" style="margin-top:0">Data: Herbalife catalogue · USDA FoodData Central · Open Food Facts</div>`:''}
+  <div style="height:30px"></div></div><div class="toast"></div>`;
+}
+function quickAdd(id){S.day[S.slot].push(mk(id));S.justAdded='q'+id;render();toast('Added to '+slotLabel(S.slot));setTimeout(()=>{if(S.justAdded==='q'+id){S.justAdded=null;if(S.scr==='add')render()}},1400)}
+function addMeal(){S.day[S.slot].push(mk('f1'),mk('tea'));go('diary');toast('My usual breakfast added')}
+function fav(id){S.fav.has(id)?S.fav.delete(id):S.fav.add(id);render()}
+
+function scrDetail(){
+  const f=byId(S.food),m=f.sv[S.svi][1]*S.qty,v=k=>Math.round(f[k]*m);
+  return `${status()}<div class="scroll">
+  <div class="sheetHd"><button class="back" onclick="go(S.fromScan?'scan':'add')">${I.back}</button><div style="font-weight:700;font-size:15px">Add food</div><button class="heart ${S.fav.has(f.id)?'on':''}" style="font-size:20px" onclick="fav('${f.id}')">${S.fav.has(f.id)?'♥':'♡'}</button></div>
+  <div style="padding:8px 20px 14px">${f.hl?'<div class="kicker" style="margin-bottom:4px">Herbalife</div>':(f.b?`<div class="kicker" style="margin-bottom:4px">${f.b}</div>`:'')}<div class="big2">${f.n}</div></div>
+  <div class="card" style="text-align:center;padding:16px">
+   <div class="mGrid"><div><div class="v">${v('k')}</div><div class="l">kcal</div></div><div><div class="v" style="color:var(--tan)">${v('p')}g</div><div class="l">Protein</div></div><div><div class="v" style="color:var(--water)">${v('c')}g</div><div class="l">Carbs</div></div><div><div class="v" style="color:var(--purple)">${v('f')}g</div><div class="l">Fat</div></div></div>
+  </div>
+  <div class="card">
+   <div class="kicker">Serving size</div>
+   <div class="opts">${f.sv.map((s,i)=>`<button class="opt ${i===S.svi?'on':''}" onclick="S.svi=${i};render()">${s[0]}</button>`).join('')}</div>
+   <div class="field" style="margin-top:12px;border-top:1px solid var(--lineSoft)"><label>Number of servings</label><div class="stepper"><button onclick="S.qty=Math.max(.5,S.qty-.5);render()">−</button><b style="min-width:28px;text-align:center;font-size:16px">${S.qty}</b><button onclick="S.qty=S.qty+.5;render()">+</button></div></div>
+  </div>
+  <div class="card"><div class="kicker">Meal</div><div class="slotPick">${SLOTS.map(([s,l])=>`<button class="opt ${s===S.slot?'on':''}" onclick="S.slot='${s}';render()">${l}${s==='snack_am'?' (am)':s==='snack_pm'?' (pm)':''}</button>`).join('')}</div></div>
+  <button class="cta" onclick="S.day[S.slot].push(mk('${f.id}',S.svi,S.qty));S.justAdded=S.slot+(S.day[S.slot].length-1);S.fromScan=false;go('diary');toast('Added to ${slotLabel(S.slot)}');setTimeout(()=>{S.justAdded=null;if(S.scr==='diary')render()},1500)">Add to ${slotLabel(S.slot)}</button>
+  ${f.bc?'<div class="hint">Found by barcode · Data from Open Food Facts (ODbL)</div>':''}
+  <div style="height:30px"></div></div><div class="toast"></div>`;
+}
+
+function scrScan(){
+  return `<div class="cam"></div>${status(true)}
+  <div class="camTop"><button onclick="go('add')" style="color:#fff">${I.close}</button><div style="font-weight:700">Scan barcode</div><div style="width:22px"></div></div>
+  <div class="barcode"></div><div class="reticle"><div class="laser"></div></div>
+  <div class="camTxt">Line the barcode up inside the frame</div>
+  ${S.scanFound?`<div class="found"><div style="display:flex;gap:12px;align-items:center">${icTile('food').replace('class="ic"','class="ic" style="width:44px;height:44px;border-radius:12px;background:#F5F0E7;display:flex;align-items:center;justify-content:center"')}<div style="flex:1"><div class="kicker">Found · Ísey</div><div style="font-weight:700;font-size:15px">Skyr Natural</div><div class="sv" style="font-size:12px;color:var(--mute)">1 pot (150 g) · 95 kcal · P 17g</div></div></div>
+   <div style="display:flex;gap:8px;margin-top:14px"><button class="addBtn" onclick="S.scanFound=false;S.food='skyr';S.svi=0;S.qty=1;S.fromScan=true;go('detail')">Change serving</button><button class="addBtn main" onclick="S.scanFound=false;S.day[S.slot].push(mk('skyr'));go('diary');toast('Skyr added to ${slotLabel(S.slot)}')">Add to ${slotLabel(S.slot)}</button></div>
+   <div class="hint" style="margin:10px 0 0">Not found? You can add it once and it’s saved for next time.</div></div>`
+  :`<div class="found" style="text-align:center"><div style="font-weight:700;font-size:14px">Point at any packaged food</div><div class="sub" style="margin-top:4px">Works for supermarket barcodes in the UK, US, Germany and Slovenia</div><button class="addBtn main" style="width:100%;margin-top:12px" onclick="S.scanFound=true;render()">Simulate a scan</button></div>`}`;
+}
+
+function scrQuick(){
+  return `${status()}<div class="scroll">
+  <div class="sheetHd"><button class="back" onclick="go('add')">${I.back}</button><div style="font-weight:700;font-size:15px">Quick add</div><div style="width:30px"></div></div>
+  <div class="sub" style="margin:8px 20px 14px">For when you know the numbers — a restaurant menu or a label. Only calories are needed.</div>
+  <div class="card">
+   <div class="qf"><label class="sub" style="color:var(--ink);font-weight:600">Name <span class="mute">(optional)</span></label><input id="qn" style="width:170px;font-weight:500;text-align:left" placeholder="e.g. Café latte"></div>
+   <div class="qf"><label class="sub" style="color:var(--ink);font-weight:600">Calories</label><input id="qk" inputmode="numeric" value="180"></div>
+   <div class="qf"><label class="sub">Protein (g)</label><input id="qp" inputmode="numeric" value="9"></div>
+   <div class="qf"><label class="sub">Carbs (g)</label><input id="qc" inputmode="numeric" value="14"></div>
+   <div class="qf"><label class="sub">Fat (g)</label><input id="qf" inputmode="numeric" value="9"></div>
+  </div>
+  <div class="card"><div class="kicker">Meal</div><div class="slotPick">${SLOTS.map(([s,l])=>`<button class="opt ${s===S.slot?'on':''}" onclick="S.slot='${s}';render()">${l}${s==='snack_am'?' (am)':s==='snack_pm'?' (pm)':''}</button>`).join('')}</div></div>
+  <button class="cta" onclick="doQuick()">Add to ${slotLabel(S.slot)}</button>
+  <div style="height:30px"></div></div><div class="toast"></div>`;
+}
+function doQuick(){const g=id=>+document.getElementById(id).value||0;const n=document.getElementById('qn').value.trim()||'Quick add';S.day[S.slot].push({n,s:'Quick add',k:g('qk'),p:g('qp'),c:g('qc'),f:g('qf'),ic:'food'});go('diary');toast('Added to '+slotLabel(S.slot))}
+
+function scrProgress(){
+  const days=[['M',1480,96],['T',1620,104],['W',980,61],['T',1550,112],['F',1390,98],['S',tot('k'),tot('p')],['S',0,0]];
+  const max=2000;
+  return `${status()}<div class="scroll" style="bottom:78px">
+  <div class="hdr"><button class="back" onclick="go('diary')">${I.back}</button><div></div></div>
+  <div class="titleRow"><div class="topTitle">Your week</div><div class="pill">12–18 Oct</div></div>
+  <div class="card">
+   <div style="display:flex;justify-content:space-between"><div class="kicker">Calories</div><div class="sub">avg <b style="color:var(--ink)">${Math.round((1480+1620+980+1550+1390+tot('k'))/6).toLocaleString()}</b> / day</div></div>
+   <div class="bars"><div class="goalLine" style="bottom:${T.kcal/max*112+16}px"><span>Target ${T.kcal.toLocaleString()}</span></div>
+    ${days.map(([d,k],i)=>`<div class="col"><div class="b" style="height:${k/max*112}px;background:${i===5?'var(--ink)':k>T.kcal*1.1?'var(--terra)':k?'var(--sage)':'transparent'}"></div>${d}</div>`).join('')}</div>
+  </div>
+  <div class="card">
+   <div style="display:flex;justify-content:space-between"><div class="kicker">Protein</div><div class="sub">target <b style="color:var(--ink)">${T.p}g</b></div></div>
+   <div class="bars" style="height:90px"><div class="goalLine" style="bottom:${T.p/130*72+16}px"></div>
+    ${days.map(([d,,p],i)=>`<div class="col"><div class="b" style="height:${p/130*72}px;background:${i===5?'var(--ink)':p>=T.p*.9?'var(--tan)':p?'var(--bronzeSoft)':'transparent'}"></div>${d}</div>`).join('')}</div>
+  </div>
+  <div class="stats">
+   <div class="stat"><div class="kicker">Days logged</div><div class="v">${S.sent?6:5}<span class="mute" style="font-size:14px">/7</span></div><div class="s">Sent to your coach</div></div>
+   <div class="stat"><div class="kicker" style="color:var(--water)">Water</div><div class="v">6.4</div><div class="s">glasses a day</div></div>
+   <div class="stat"><div class="kicker">Shakes</div><div class="v">11</div><div class="s">this week · 2 a day goal</div></div>
+   <div class="stat"><div class="kicker" style="color:var(--sage)">Weight</div><div class="v">−0.8<span class="mute" style="font-size:14px"> kg</span></div><div class="s">since last Sunday</div></div>
+  </div>
+  <div class="card" style="background:var(--sageFill);border-color:#CBDDCC"><div style="font-weight:700;font-size:13.5px;color:var(--ink)">From Coach Rebecca</div><div class="sub" style="margin-top:4px;color:var(--ink)">“Lovely week! Let’s get a protein snack in on Wednesdays — that was your low day.”</div></div>
+  <div style="height:20px"></div></div>
+  <div class="tabbar">${[['today','Today',1],['ch','Challenges'],['plan','Plan'],['chat','Chat'],['you','You']].map(([k,l,on])=>`<div class="${on?'on':''}">${tabIcon(k,on?'#F26B1D':'#1d2438')}${l}</div>`).join('')}</div><div class="toast"></div>`;
+}
+
+function scrHome(){
+  return `${status()}<div class="scroll" style="bottom:78px">
+  <div style="padding:14px 20px 4px"><div class="kicker">Saturday 17 October</div><div style="font-family:Fraunces,serif;font-weight:500;font-size:30px;letter-spacing:-.4px;margin-top:4px">Hey Laura,</div></div>
+  <div class="card" style="margin-top:12px;cursor:pointer" onclick="go('diary')">
+   <div style="display:flex;gap:12px;align-items:center">
+    <div style="width:42px;height:42px;border-radius:12px;background:var(--sageFill);display:flex;align-items:center;justify-content:center">${I.food.replace('#7d5e34','#5a7a5e')}</div>
+    <div style="flex:1"><div style="font-weight:700;font-size:15px">Food diary</div><div class="sub">${tot('k').toLocaleString()} of ${T.kcal.toLocaleString()} kcal · protein ${tot('p')}/${T.p}g</div></div>
+    <div class="ring" style="width:46px;height:46px">${ring(tot('k'),T.kcal,46,5)}</div>
+   </div>
+   <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="addBtn" onclick="event.stopPropagation();S.slot='snack_pm';S.seg='hl';S.q='';go('add')">+ Shake</button>
+    <button class="addBtn" onclick="event.stopPropagation();S.slot='dinner';S.seg='recent';S.q='';go('add')">+ Food</button>
+    <button class="addBtn" onclick="event.stopPropagation();S.water=Math.min(12,S.water+1);render();toast('Water '+S.water+'/8')">+ Water</button>
+   </div>
+  </div>
+  <div class="card" style="opacity:.55"><div class="kicker">The rest of Today stays exactly as it is</div><div class="sub" style="margin-top:4px">Rings, recipes, challenge cards… only the food diary card changes.</div></div>
+  </div>
+  <div class="tabbar">${[['today','Today',1],['ch','Challenges'],['plan','Plan'],['chat','Chat'],['you','You']].map(([k,l,on])=>`<div class="${on?'on':''}">${tabIcon(k,on?'#F26B1D':'#1d2438')}${l}</div>`).join('')}</div><div class="toast"></div>`;
+}
+
+/* ═══════════════════════ COACH SCREENS ═══════════════════════ */
+function coachTabs(on){return `<div class="coachTab">${['Home','Clients','Team','Tools','You'].map(l=>`<div class="${l===on?'on':''}">${l}</div>`).join('')}</div>`}
+function scrCoachDetail(){
+  const k=tot('k'),p=tot('p');
+  return `${status()}<div class="scroll" style="bottom:78px">
+  <div class="hdr"><button class="back" onclick="S.coachScr='list';render()">${I.back.replace('#1d2438','#0D2842')}</button><div></div></div>
+  <div class="hero"><div class="av">LM</div><div style="flex:1"><div style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:20px;color:var(--cdInk)">Laura M.</div><div class="cMeta">Goal: lose weight · customer since 2 Oct</div></div></div>
+  <div class="ctTabs">${[['o','Overview'],['d','Diary'],['p','Plan'],['n','Follow-ups'],['s','Onboarding']].map(([x,l])=>`<button class="${x==='d'?'on':''}" onclick="${x==='d'?'':"toast('Existing tab — unchanged')"}">${l}</button>`).join('')}</div>
+
+  <div class="cCard">
+   <div style="display:flex;justify-content:space-between;align-items:center"><div class="cLbl">This week</div><div class="badge" style="background:var(--cdSageFill);color:var(--cdSage)">5 of 7 sent</div></div>
+   <div class="week">${[['Mon',12,'g'],['Tue',13,'g'],['Wed',14,'a'],['Thu',15,'g'],['Fri',16,'g'],['Sat',17,'on'],['Sun',18,'']].map(([d,n,c])=>`<div class="wd ${c}"><div class="d">${d}</div><div class="n">${n}</div></div>`).join('')}</div>
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center">
+    <div><div style="font-family:'Plus Jakarta Sans';font-weight:500;font-size:20px;color:var(--cdInk)">93%</div><div class="cMeta">avg of kcal target</div></div>
+    <div><div style="font-family:'Plus Jakarta Sans';font-weight:500;font-size:20px;color:var(--cdInk)">86%</div><div class="cMeta">avg of protein</div></div>
+    <div><div style="font-family:'Plus Jakarta Sans';font-weight:500;font-size:20px;color:var(--cdInk)">11/14</div><div class="cMeta">shakes</div></div>
+   </div>
+  </div>
+
+  <div class="cCard">
+   <div class="cLbl" style="margin-bottom:6px">Needs a look</div>
+   <div class="flag"><div class="dot" style="background:#FAE1E9;color:#9B3B5A">!</div><div class="ft">Protein under 70% on Wednesday<small>61g of 110g · lowest day this week</small></div><button class="nudge" onclick="S.coachScr='note';render()">Message</button></div>
+   <div class="flag"><div class="dot" style="background:#F3E7D8;color:#B06033">◐</div><div class="ft">Wednesday not sent<small>3 of 5 meals filled, never sent</small></div><button class="nudge" onclick="toast('Opens nudge composer (existing)')">Nudge</button></div>
+   <div class="flag"><div class="dot" style="background:var(--cdBlueFill);color:var(--cdBlue)">💧</div><div class="ft">Water averaging 6.4 of 8<small>4 days under target</small></div><button class="nudge" onclick="toast('Opens nudge composer (existing)')">Nudge</button></div>
+  </div>
+
+  <div class="cCard">
+   <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="cLbl">Today · Sat 17</div><div class="cMeta">${S.sent?'Sent 7:42 pm':'Not sent yet'}</div></div>
+   <div style="display:flex;gap:14px;align-items:center;margin-top:12px">
+    <div class="ring" style="width:70px;height:70px">${ring(k,T.kcal,70,7,'#5A7A5E')}<div class="c"><div style="font-weight:800;font-size:14px">${k}</div><div style="font-size:9.5px;color:var(--cdMeta)">/ ${T.kcal}</div></div></div>
+    <div style="flex:1">${[['Protein',p,T.p,'#C8956C'],['Carbs',tot('c'),T.c,'#5A8FB0'],['Fat',tot('f'),T.f,'#8B7DB0']].map(([l,v,t,c])=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--cdBody)"><span>${l}</span><b style="color:var(--cdInk)">${v}/${t}g</b></div><div class="bar" style="margin:4px 0 7px"><i style="width:${pct(v,t)}%;background:${c}"></i></div>`).join('')}</div>
+   </div>
+   ${SLOTS.map(([s,l])=>{const it=S.day[s];return `<div style="border-top:1px solid #F1ECE2;padding:10px 0 4px;margin-top:6px"><div style="display:flex;justify-content:space-between"><div style="font-weight:800;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--cdTan)">${l}</div><div style="font-size:12px;font-weight:700;color:var(--cdInk)">${it.length?sum(it,'k')+' kcal':'<span style="color:var(--cdMeta);font-weight:500">—</span>'}</div></div>
+    ${it.map(x=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--cdBody);padding:3px 0"><span>${x.hl?'<b style="color:var(--cdTan)">●</b> ':''}${x.n}</span><span style="color:var(--cdMeta)">P ${x.p}g</span></div>`).join('')}
+    ${S.photo[s]?'<div style="display:flex;gap:8px;align-items:center;margin-top:5px"><div class="ph" style="width:46px;height:46px"></div><span class="cMeta">Meal photo</span></div>':''}</div>`}).join('')}
+   <div style="display:flex;justify-content:space-between;border-top:1px solid #F1ECE2;padding-top:10px;margin-top:6px;font-size:12.5px;color:var(--cdBody)"><span>Water</span><b style="color:var(--cdInk)">${S.water} / 8 glasses</b></div>
+  </div>
+  <button class="cBtn" onclick="S.coachScr='note';render()">Leave Laura a note on today</button>
+  <button class="cBtn ghost" onclick="S.coachScr='targets';render()">Edit her targets</button>
+  <div style="height:24px"></div></div>${coachTabs('Clients')}<div class="toast"></div>`;
+}
+function scrCoachList(){
+  const rows=[['LM','Laura M.','Sent today · 93% of target',['g','g','a','g','g','g',''],'',''],['DK','Dana K.','No log for 2 days',['g','g','g','','','',''],'2 days quiet','#FAE1E9;color:#9B3B5A'],['PS','Petra S.','Protein low 3 days running',['g','a','g','g','g','',''],'Low protein','#F3E7D8;color:#B06033'],['JR','Jana R.','Sent today · on track',['g','g','g','g','g','g',''],'',''],['MB','Mia B.','Day 3 of 7 · first week',['g','g','a','','','',''],'New','var(--cdBlueFill);color:var(--cdBlue)']];
+  return `${status()}<div class="scroll" style="bottom:78px">
+  <div style="padding:10px 20px 4px"><div class="cTitle">Food logs</div><div class="cMeta" style="margin-top:2px">Your customers this week · tap one to open their Diary tab</div></div>
+  <div style="display:flex;gap:8px;margin:12px 20px">${[['All',5,1],['Needs a look',2],['Sent today',2]].map(([l,n,on])=>`<div class="nudge" style="${on?'background:var(--cdNavy);color:#fff;border-color:var(--cdNavy)':''}">${l} ${n}</div>`).join('')}</div>
+  <div class="cCard">${rows.map(([i,n,s,m,b,bc])=>`<div class="cliRow" onclick="S.coachScr='detail';render()" style="cursor:pointer"><div class="av">${i}</div><div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--cdInk)">${n}</div><div class="cMeta">${s}</div><div class="mini">${m.map(c=>`<i class="${c}"></i>`).join('')}</div></div>${b?`<span class="badge" style="background:${bc}">${b}</span>`:''}</div>`).join('')}</div>
+  <div class="cCard" style="background:var(--cdCream)"><div class="cLbl" style="font-size:10px">Where this lives</div><div class="cMeta" style="margin-top:4px;font-size:12px;line-height:17px">A “Food logs” card on Home and a filter on Clients — both open the existing customer Diary tab. Pushes stay as today: one notification when a customer taps Send.</div></div>
+  </div>${coachTabs('Home')}<div class="toast"></div>`;
+}
+function scrCoachNote(){
+  return `${status()}<div class="scroll">
+  <div class="hdr"><button class="back" onclick="S.coachScr='detail';render()">${I.back.replace('#1d2438','#0D2842')}</button><div></div></div>
+  <div style="padding:6px 20px 12px"><div class="cTitle" style="font-size:21px">Note on Laura’s day</div><div class="cMeta">Saturday 17 October · she sees it under her diary</div></div>
+  <div class="cCard"><div class="cLbl" style="font-size:10px">Quick picks</div>
+   <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px">${['Great day! 🙌','Add a protein snack','Second shake?','More water tomorrow','Love the meal photo'].map(t=>`<button class="nudge" onclick="document.getElementById('cn').value='${t}'">${t}</button>`).join('')}</div>
+   <textarea id="cn" class="cIn" rows="4" placeholder="Write something kind and specific…">Lovely week! Let’s get a protein snack in on Wednesdays — that was your low day.</textarea>
+  </div>
+  <button class="cBtn" onclick="S.coachScr='detail';render();setTimeout(()=>toast('Note sent — Laura gets a push'),30)">Send note</button>
+  <div class="cMeta" style="text-align:center;margin:10px 30px">Uses the existing message/push path. Coaches can read and comment — never edit a customer’s food.</div>
+  </div><div class="toast"></div>`;
+}
+function scrCoachTargets(){
+  return `${status()}<div class="scroll">
+  <div class="hdr"><button class="back" onclick="S.coachScr='detail';render()">${I.back.replace('#1d2438','#0D2842')}</button><div></div></div>
+  <div style="padding:6px 20px 12px"><div class="cTitle" style="font-size:21px">Laura’s daily targets</div><div class="cMeta">Lives on her meal plan (member_meal_plan) next to the protein goal you already set</div></div>
+  <div class="cCard">
+   ${[['Calories','1600','kcal'],['Protein','110','g'],['Carbs','160','g'],['Fat','55','g'],['Water','8','glasses'],['Shakes','2','a day']].map(([l,v,u])=>`<div class="qf"><label style="font-size:13.5px;color:var(--cdInk);font-weight:600">${l}</label><div style="display:flex;align-items:center;gap:6px"><input value="${v}" style="width:76px;border-color:var(--cdBorder);background:var(--cdCream)"><span class="cMeta" style="width:46px">${u}</span></div></div>`).join('')}
+  </div>
+  <div class="cCard"><div class="qf" style="border:0;padding:0"><div><div style="font-weight:700;font-size:13.5px;color:var(--cdInk)">Show calories to Laura</div><div class="cMeta">Off = she sees protein, portions and water only</div></div><button onclick="S.targetsKcal=!S.targetsKcal;render()" style="width:46px;height:28px;border-radius:14px;background:${S.targetsKcal?'var(--cdSage)':'#D9D2C4'};position:relative"><i style="position:absolute;top:3px;${S.targetsKcal?'right:3px':'left:3px'};width:22px;height:22px;border-radius:11px;background:#fff"></i></button></div></div>
+  <button class="cBtn" onclick="S.coachScr='detail';render();setTimeout(()=>toast('Targets saved'),30)">Save targets</button>
+  <div class="cMeta" style="text-align:center;margin:10px 30px">Suggested from her goal and weight — you can always change them.</div>
+  </div><div class="toast"></div>`;
+}
+
+/* ═══════════════════════ RAIL + NOTES ═══════════════════════ */
+const CUST=[
+ ['home','Today (Home) card','Entry point + quick-add buttons'],
+ ['diary','Food diary','Day by meal, totals vs targets, water, Send'],
+ ['add','Add food','Search, Recent, Favourites, Herbalife, My meals'],
+ ['detail','Food detail','Serving size, servings, meal'],
+ ['scan','Barcode scan','Camera → product → add'],
+ ['quick','Quick add','Calories / macros by hand'],
+ ['progress','Your week','Progress summary + coach note'],
+];
+const COACH=[
+ ['list','Food logs (Home / Clients)','Who sent, who needs a look'],
+ ['detail','Customer → Diary tab','Compliance, flags, the day in full'],
+ ['note','Note on a day','Coach comment → customer push'],
+ ['targets','Targets','Coach sets kcal / macros / water'],
+];
+const NOTES={
+ home:`<span class="tag">Customer app</span><h4>Today card</h4>The existing sage Food diary card on Home grows a mini ring and three quick buttons. <b>+ Shake</b> jumps straight to the Herbalife list.<ul><li>Everything else on Today stays as it is.</li><li>Still behind the AIW-039 gate (your 4 addresses + QA) until you say open.</li></ul>`,
+ diary:`<span class="tag">Customer app</span><h4>Food diary — the upgrade</h4>Built on the screen that's live today, not a second one: same title, the 7-day pill, the day strip (sage = sent, tan = partial), the water stepper and the tan <b>Send to my coach</b> button.<ul><li><b>New:</b> calories-left ring + protein/carbs/fat bars against her targets.</li><li>The <b>same five Herbalife slots</b> (Breakfast · Snack · Lunch · Snack · Dinner) — each slot now holds foods instead of a text box.</li><li>Per meal: <b>+ Add food</b>, barcode, meal photo. Tap × to remove.</li><li>Send works exactly as today, so the coach push already in production still fires.</li></ul><i>Try it:</i> tap + Add food on Dinner, or the camera icon.`,
+ add:`<span class="tag">Customer app</span><h4>Add food</h4>Search over one food list: the Herbalife catalogue for her country, plus everyday foods and supermarket barcodes.<ul><li><b>+</b> adds the default serving in one tap; tap a name to change the serving.</li><li><b>Herbalife</b> tab = one-tap shakes, PDM, tea, aloe, bars.</li><li><b>My meals</b> = a saved combination (e.g. “my usual breakfast”).</li><li>♡ adds to Favourites.</li></ul><i>Try it:</i> type “salmon”, or switch to Herbalife.`,
+ detail:`<span class="tag">Customer app</span><h4>Food detail</h4>Macros update live as she changes the serving or count. She can move the food to a different meal before adding.`,
+ scan:`<span class="tag">Customer app</span><h4>Barcode scan</h4>The camera reads the code; we look it up in our own food list first, then in Open Food Facts (strong for UK/EU supermarket food — matters for Germany and Slovenia). Anything found is saved so the next person gets it instantly.<br><br><i>Tap “Simulate a scan”.</i>`,
+ quick:`<span class="tag">Customer app</span><h4>Quick add</h4>For restaurant meals or labels. Only calories are needed; macros are optional.`,
+ progress:`<span class="tag">Customer app</span><h4>Your week</h4>Calories and protein against her targets, days sent, water, shakes and her weight change. The coach's latest note shows at the bottom so the loop feels personal.`,
+ list:`<span class="tag">Coach app</span><h4>Food logs overview</h4>“It gets sent through”: one list of the coach's own customers with a 7-day mini strip and a badge when something needs attention (quiet 2+ days, protein low 3 days, new customer).<ul><li>Opens the existing customer screen on its <b>Diary</b> tab.</li><li>Only ever shows the coach's own customers — the database enforces it.</li></ul>`,
+ note:`<span class="tag">Coach app</span><h4>Note on a day</h4>The coach leaves a short note on a day; the customer gets a push and sees it on her diary and Your week. Coaches can comment but can never edit the customer's food.`,
+ targets:`<span class="tag">Coach app</span><h4>Targets</h4>Calorie, macro, water and shake targets per customer, stored next to the protein goal coaches already set. A toggle hides calories from customers who shouldn't count them (see Decisions).`,
+};
+function rail(){
+  const L=S.mode==='customer'?CUST:COACH,cur=S.mode==='customer'?S.scr:S.coachScr;
+  return `<div class="rail"><h3>${S.mode==='customer'?'Customer app · screens':'Coach app · screens'}</h3>${L.map(([k,t,s])=>`<button class="${k===cur?'on':''}" onclick="${S.mode==='customer'?`go('${k}')`:`S.coachScr='${k}';render()`}">${t}<span>${s}</span></button>`).join('')}
+  <h3 style="margin-top:14px">Reset</h3><button onclick="location.reload()">Start again<span>Clears your test taps</span></button></div>`;
+}
+
+/* ═══════════════════════ DOCS ═══════════════════════ */
+const PLAN=`<div class="doc">
+<h2>Food log — back-end plan</h2>
+<p class="mute" style="color:#9c9787">AIW-308 · design only · same Supabase project the two apps already use · nothing below has been run</p>
+
+<h3>1. What's already there (we build on it)</h3>
+<ul>
+<li><code>public.food_logs</code> — one row per customer per day: <code>slots</code> (jsonb text per meal), <code>water_glasses</code>, <code>note</code>, <code>sent_at</code>. Unique on <code>(member_id, date)</code>. Dates are the phone's local date.</li>
+<li>Trigger <code>food_log_sent_notify</code> → push <code>dist-client-food-diary</code> to the coach the first time a day is sent. Test-account guard via <code>private.is_test_registration()</code>.</li>
+<li>RLS pattern used everywhere: owner <code>member_id = auth.uid()</code>; coach read via <code>public.is_my_member(member_id)</code>, which follows <code>profiles.coach_id</code>.</li>
+<li><code>public.member_meal_plan</code> already holds <code>protein_goal_g</code> and is coach-editable.</li>
+<li>Herbalife products per country: <code>src/data/productCatalog.ts</code> + <code>herbalifeCountryCatalog.json</code>.</li>
+</ul>
+<div class="rec"><b>Principle:</b> additive only. <code>food_logs</code> stays the “day” row (water, note, Send). Foods go in a new child table. Old text answers keep showing as “typed notes”, so nobody loses anything.</div>
+
+<h3>2. New tables</h3>
+<table>
+<tr><th>Table</th><th>What it holds</th><th>Who can touch it</th></tr>
+<tr><td><code>foods</code></td><td>The shared food list. <code>source</code> (herbalife / usda / off / custom), <code>source_ref</code>, <code>barcode</code>, <code>name</code>, <code>brand</code>, <code>country</code>, per-100 g <code>kcal, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg</code>, <code>servings</code> jsonb <code>[{label, grams}]</code>, <code>verified</code>. Trigram index on name, unique on barcode.</td><td>Read: any signed-in user. Write: server only (edge function / import).</td></tr>
+<tr><td><code>food_log_entries</code></td><td>One row per food logged: <code>member_id, date, slot, food_id</code> (nullable for quick add), <b>snapshot</b> of <code>name, serving_label, grams, servings, kcal, protein_g, carbs_g, fat_g</code>, <code>entry_type</code> (search / barcode / quick / herbalife / meal), <code>created_at, updated_at</code>.</td><td>Customer: own rows. Coach: read own customers.</td></tr>
+<tr><td><code>food_log_photos</code></td><td><code>member_id, date, slot, storage_path</code>. Files in a private bucket <code>meal-photos/{member_id}/{date}/{uuid}.jpg</code>.</td><td>Same as entries. Bucket policies mirror the rows.</td></tr>
+<tr><td><code>member_custom_foods</code></td><td>Foods a customer creates or saves; “My meals” as a jsonb item list.</td><td>Customer only.</td></tr>
+<tr><td><code>member_food_favourites</code></td><td><code>(member_id, food_id)</code>. “Recent” comes from entries, no table.</td><td>Customer only.</td></tr>
+<tr><td><code>food_day_notes</code></td><td>Coach note on a day: <code>member_id, date, coach_id, body, read_at</code>.</td><td>Coach writes for own customers; customer reads own + marks read.</td></tr>
+<tr><td><code>member_meal_plan</code> (extend)</td><td>Add <code>kcal_goal, carbs_goal_g, fat_goal_g, water_goal, shakes_goal, show_kcal</code> next to existing <code>protein_goal_g</code>.</td><td>As today: customer reads, coach edits.</td></tr>
+</table>
+<p>Plus a view <code>food_log_day_totals</code> (sum per member per day) and a function <code>coach_food_flags()</code> that returns the “Needs a look” list for the calling coach only (quiet ≥2 days, protein &lt;70% of goal ≥3 days, unsent partial day, water under goal ≥4 days). Flags are worked out when asked, not stored, so they can't go stale.</p>
+<p><b>Why snapshot macros on the entry?</b> If a food's values are corrected later, a customer's past days (and what her coach saw) must not change underneath her.</p>
+
+<h3>3. Row-level security (sketch)</h3>
+<pre>alter table public.food_log_entries enable row level security;
+
+create policy "fle_own" on public.food_log_entries
+  for all using (member_id = auth.uid())
+  with check (member_id = auth.uid());
+
+create policy "fle_coach_read" on public.food_log_entries
+  for select using (public.is_my_member(member_id));
+
+-- foods: readable by any signed-in user, never writable from the app
+create policy "foods_read" on public.foods for select to authenticated using (true);
+revoke insert, update, delete on public.foods from authenticated, anon;
+
+-- coach notes
+create policy "fdn_coach_write" on public.food_day_notes
+  for insert with check (coach_id = auth.uid() and public.is_my_member(member_id));
+create policy "fdn_read" on public.food_day_notes
+  for select using (member_id = auth.uid() or coach_id = auth.uid());
+
+-- photos bucket: first folder must be the caller's own id
+create policy "meal_photos_own" on storage.objects for all
+  using (bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "meal_photos_coach" on storage.objects for select
+  using (bucket_id = 'meal-photos' and public.is_my_member(((storage.foldername(name))[1])::uuid));</pre>
+<p><b>Identity:</b> both apps already sign in through Supabase Auth, so every request carries the user's JWT and <code>auth.uid()</code> is who they are. Customers can only ever see rows with their own id; coaches only rows where <code>is_my_member()</code> is true. Nothing in either app uses the service-role key. Edge functions keep <code>verify_jwt</code> on and read the user from the token.</p>
+<div class="warn"><b>Verification before launch:</b> anon-key probes can't prove authenticated access (AIW-158), so RLS gets tested signed in as a real customer, a coach with that customer and a coach without, with every read checked by reading the rows back.</div>
+
+<h3>4. Where the food data comes from</h3>
+<table>
+<tr><th>Source</th><th>Cost</th><th>Licence / limits</th><th>Good for</th><th>Watch out</th></tr>
+<tr><td><b>Our own Herbalife list</b></td><td>Free</td><td>Ours</td><td>One-tap shakes and products per country</td><td>Values need entering once per country from labels</td></tr>
+<tr><td><b>USDA FoodData Central</b></td><td>Free (data.gov key)</td><td>Public domain (CC0). API 1,000 requests/hour per IP. Credit requested.</td><td>Everyday foods (chicken, rice, fruit…) — high quality</td><td>Branded foods are US only; no EU barcodes. We import once, so no live dependency.</td></tr>
+<tr><td><b>Open Food Facts</b></td><td>Free, no key</td><td>ODbL: credit + share-alike on the database. 15 product reads/min and 10 searches/min per IP; custom User-Agent required.</td><td>Barcode scans, strongest for UK/EU supermarkets</td><td>Crowd-sourced, quality varies. Keep cached rows marked <code>source='off'</code> so share-alike only applies to that slice.</td></tr>
+<tr><td><b>FatSecret Platform</b></td><td>Basic free (5,000 calls/day, US data). “Premier Free” for start-ups under US$1M revenue (credit required). Premier: priced on request.</td><td>Commercial terms</td><td>Big verified database, autocomplete, barcode</td><td>Non-US data and white-label need paid Premier</td></tr>
+<tr><td><b>Nutritionix</b> (Syndigo)</td><td>Quote only, no public prices</td><td>Commercial</td><td>Plain-language logging (“2 eggs and toast”), restaurant menus</td><td>US-focused; paid from the start</td></tr>
+</table>
+<div class="rec"><b>Recommendation — start free:</b> (1) seed <code>foods</code> with our Herbalife catalogue + a one-off USDA import of everyday foods; (2) barcode scans go to an edge function <code>food-barcode</code> that checks <code>foods</code> first, then Open Food Facts, and saves what it finds; (3) search is a Postgres function <code>search_foods(q, country)</code> with a trigram index — fast, and no rate limits. Look at FatSecret Premier only if customers say search is missing things.</div>
+
+<h3>5. How “it gets sent through”</h3>
+<ol>
+<li>Customer adds foods → rows in <code>food_log_entries</code> (autosave, no push).</li>
+<li>Customer taps <b>Send to my coach</b> → stamps <code>food_logs.sent_at</code> exactly as today → the push trigger that's already live notifies the coach.</li>
+<li>Coach opens Diary → reads entries, totals, photos and flags under their own RLS.</li>
+<li>Coach leaves a note → <code>food_day_notes</code> → push to the customer through the existing catalogue.</li>
+</ol>
+
+<h3>6. Things that must change together</h3>
+<ul>
+<li><b>“A day is complete” rule.</b> Today a day is green when it's sent and all five slots have text (<code>dayIsGreen()</code> customer side, <code>dayComplete()</code> coach side). Both must count a slot as filled if it has text <i>or</i> at least one food — changed in both apps at the same time, or the two screens disagree again (AIW-106).</li>
+<li><b>Coach app mirror</b> <code>src/data/foodLog.ts</code> reads the new tables in the same release.</li>
+<li><b>Translations:</b> all new copy keyed in en/de/sl. Food names come from the source — USDA is English only, so German/Slovenian customers see English generic names until we add translated names.</li>
+<li><b>Visibility:</b> stays behind <code>canSeeOnboarding()</code> (AIW-039) until you open it.</li>
+</ul>
+
+<h3>7. Rough build order (after you approve)</h3>
+<ol><li>Migration: tables, RLS, bucket, view, flags function — tested as a customer and as two coaches.</li><li>Seed Herbalife catalogue + USDA import.</li><li>Customer app: diary + add food + Herbalife + quick add (no scanner yet).</li><li>Coach app: Diary tab totals + flags + notes.</li><li>Barcode edge function + scanner, meal photos, Your week.</li></ol>
+</div>`;
+
+const DECIDE=`<div class="doc">
+<h2>Decisions for you</h2>
+<p class="mute" style="color:#9c9787">Five yes/no style calls before anything is built. My suggestion is in brackets.</p>
+<ol class="dec">
+<li><b>Should customers see calories?</b> Some coaches prefer protein, portions and shakes over counting calories. Options: everyone sees calories / nobody does / <b>the coach chooses per customer</b> (my suggestion — it's the toggle on the coach Targets screen).</li>
+<li><b>Who sets targets?</b> The coach types them in, or the app suggests them from goal + weight and the coach adjusts. <i>(Suggest, coach confirms.)</i></li>
+<li><b>Typing vs food search for the 7-day onboarding diary.</b> Replace the free-text boxes with food search, or keep a “just type it” option for brand-new customers. <i>(Keep both: search by default, a “type it instead” link per meal.)</i></li>
+<li><b>Food database:</b> free stack (Herbalife list + USDA + Open Food Facts), or pay for FatSecret/Nutritionix from day one. <i>(Free first; review after a month of real use.)</i></li>
+<li><b>Who gets it first?</b> It stays on your own accounts (as the food diary is now, AIW-039) until you say open it to all customers. <i>(Your accounts → a few test customers → everyone.)</i></li>
+</ol>
+<div class="warn" style="margin-top:18px"><b>One thing I kept from the live app on purpose:</b> the five Herbalife meals (Breakfast · Snack · Lunch · Snack · Dinner) rather than MyFitnessPal's four. The coach app already uses exactly these five, and changing that would break the 7-day rule.</div>
+</div>`;
+
+/* ═══════════════════════ RENDER ═══════════════════════ */
+function go(s){S.scr=s;render();const sc=document.getElementById('sc')||document.querySelector('.scroll');if(sc)sc.scrollTop=0}
+function phoneHtml(){
+  if(S.mode==='customer') return ({home:scrHome,diary:scrDiary,add:scrAdd,detail:scrDetail,scan:scrScan,quick:scrQuick,progress:scrProgress})[S.scr]();
+  return ({list:scrCoachList,detail:scrCoachDetail,note:scrCoachNote,targets:scrCoachTargets})[S.coachScr]();
+}
+function render(){
+  const w=document.getElementById('stageWrap');
+  document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+  if(S.mode==='plan'){w.innerHTML=PLAN;return}
+  if(S.mode==='decide'){w.innerHTML=DECIDE;return}
+  const prev=document.querySelector('.scroll'),top=prev?prev.scrollTop:0,same=w.dataset.k===S.mode+S.scr+S.coachScr;
+  const note=S.mode==='customer'?NOTES[S.scr]:NOTES[S.coachScr];
+  w.innerHTML=`<div class="stage ${S.mode==='coach'?'coach':''}">${rail()}<div class="phone"><div class="screen">${phoneHtml()}</div></div><div class="notes">${S.mode==='coach'&&S.coachScr==='detail'?`<span class="tag">Coach app</span><h4>Customer → Diary tab</h4>Uses the coach app's existing underlined tabs (Overview / Diary / Plan / Follow-ups / Onboarding). Diary now shows:<ul><li><b>This week:</b> sent days in the existing green/amber, plus % of calorie and protein target and shakes.</li><li><b>Needs a look:</b> automatic flags with a Message/Nudge button (the nudge composer you already have).</li><li><b>The day in full:</b> totals, every food per meal (● = Herbalife), photos, water.</li></ul><i>Tip:</i> add food on the Customer app tab, then come back here — the coach view updates.`:note}</div></div>`;
+  w.dataset.k=S.mode+S.scr+S.coachScr;
+  if(same){const sc=document.querySelector('.scroll');if(sc)sc.scrollTop=top}
+}
+function renderKeep(){const pos=document.getElementById('q').selectionStart;render();const q=document.getElementById('q');if(q){q.focus();q.setSelectionRange(pos,pos)}}
+document.getElementById('modes').addEventListener('click',e=>{const m=e.target.closest('button');if(!m)return;S.mode=m.dataset.m;render();window.scrollTo(0,0)});
+render();
+</script>
+</body>
+</html>
