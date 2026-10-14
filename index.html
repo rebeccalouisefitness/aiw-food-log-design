@@ -240,7 +240,7 @@ input{font:inherit}
 </head>
 <body>
 <div class="top">
-  <h1>Food Log — design for approval<small>AIW-308 · DESIGN ONLY, nothing built in the apps · customer app styles from live v254, coach styles from live v849</small></h1>
+  <h1>Food Log — design for approval<small>AIW-308 · v2, 13 Oct: calories shown to everyone + both coach and customer can set targets · DESIGN ONLY, nothing built in the apps · customer app styles from live v254, coach styles from live v849</small></h1>
   <div class="modes" id="modes">
     <button data-m="customer" class="on">Customer app</button>
     <button data-m="coach">Coach app</button>
@@ -280,8 +280,20 @@ let S={
   mode:'customer', scr:'diary', coachScr:'detail', slot:'lunch', food:'chk', svi:0, qty:1, seg:'recent', q:'', water:5,
   sent:false, photo:{lunch:true}, fav:new Set(['f1','yog','chk']), justAdded:null,
   day:{breakfast:[mk('f1'),mk('tea')],snack_am:[mk('yog')],lunch:[mk('chk'),mk('sal'),mk('oil')],snack_pm:[],dinner:[]},
-  targetsKcal:true,
+  /* Targets: BOTH coach and customer can edit (Rebecca, 13 Oct). Newest change wins,
+     the other side is told. tLog = the change history both screens show. */
+  tLog:[{who:'coach',txt:'Coach Rebecca set her starting targets',when:'2 Oct'}],
 };
+const TFIELDS=[['kcal','Calories','kcal',50],['p','Protein','g',5],['c','Carbs','g',5],['f','Fat','g',5],['water','Water','glasses',1]];
+const fmtT=(k,v)=>k==='kcal'?v.toLocaleString():v;
+function lastChange(){return S.tLog[0]}
+function saveTargets(who,prefix){
+  const ch=[];
+  for(const [k,l,u] of TFIELDS){const el=document.getElementById(prefix+k);if(!el)continue;const v=Math.max(0,parseInt(String(el.value).replace(/[^0-9]/g,''))||0);if(v!==T[k]){ch.push(l.toLowerCase()+' '+fmtT(k,T[k])+' → '+fmtT(k,v)+(u==='kcal'?'':u==='g'?'g':''));T[k]=v}}
+  if(!ch.length)return 0;
+  S.tLog.unshift({who,txt:(who==='me'?'Laura changed ':'Coach Rebecca changed ')+ch.join(', '),when:'Just now',seen:who==='coach'});
+  return ch.length;
+}
 const RECENT=['f1','tea','yog','chk','sal','oil','egg','pdm'];
 
 /* ═══════════════════════ ICONS ═══════════════════════ */
@@ -332,10 +344,11 @@ function scrDiary(){
   <div class="titleRow"><div class="topTitle">Food diary</div><div class="pill ${S.sent?'done':''}">${S.sent?5:4}/7 days</div></div>
   <div class="strip">${chips.map(([d,n,c],i)=>`<div class="chip ${i===5?'on':c}" ${i===5?'':`onclick="toast('Opens ${d} ${n}')"`}><div class="d">${d}</div><div class="n">${n}</div></div>`).join('')}</div>
 
+  ${(()=>{const c=lastChange();return c.who==='coach'&&c.when==='Just now'&&!c.custSeen?`<div class="card" style="background:var(--sageFill);border-color:#CBDDCC;display:flex;gap:10px;align-items:center;padding:12px 14px"><div style="flex:1;font-size:12.5px;color:var(--ink);line-height:17px"><b>Coach Rebecca updated your targets</b><br>${c.txt.replace('Coach Rebecca changed ','')}</div><button class="addBtn" style="flex:0 0 auto;padding:7px 12px" onclick="lastChange().custSeen=true;render()">OK</button></div>`:''})()}
   <div class="card">
    <div class="sumTop">
     <div class="ring">${ring(k,T.kcal,104,10,left<0?'var(--terra)':'var(--sage)')}<div class="c"><div class="big">${Math.abs(left).toLocaleString()}</div><div class="lbl">${left<0?'kcal over':'kcal left'}</div></div></div>
-    <div class="eq"><div class="kicker" style="margin-bottom:6px">Today</div>
+    <div class="eq"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="kicker">Today</div><button onclick="go('mytargets')" style="font-weight:700;font-size:11.5px;color:var(--tan)">Targets ›</button></div>
      <div class="r"><span>Target</span><b>${T.kcal.toLocaleString()}</b></div>
      <div class="r"><span>Food</span><b>${k.toLocaleString()}</b></div>
      <div class="r" style="border-top:1px solid var(--lineSoft);margin-top:3px;padding-top:6px"><span>${left<0?'Over':'Remaining'}</span><b style="color:${left<0?'var(--terra)':'var(--sage)'}">${Math.abs(left).toLocaleString()}</b></div>
@@ -470,6 +483,26 @@ function scrProgress(){
   <div class="tabbar">${[['today','Today',1],['ch','Challenges'],['plan','Plan'],['chat','Chat'],['you','You']].map(([k,l,on])=>`<div class="${on?'on':''}">${tabIcon(k,on?'#F26B1D':'#1d2438')}${l}</div>`).join('')}</div><div class="toast"></div>`;
 }
 
+function changeRow(c,coachSkin){
+  const mine=c.who==='me',col=coachSkin?'var(--cdMeta)':'var(--mute)';
+  const label=coachSkin?(mine?'Laura':'You'):(mine?'You':'Coach Rebecca');
+  return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid ${coachSkin?'#F1ECE2':'var(--lineSoft)'}"><div style="width:26px;height:26px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10.5px;color:#fff;background:${mine?'var(--tan)':'var(--ink)'}">${mine?'LM':'RL'}</div><div style="flex:1;font-size:12.5px;line-height:17px;color:${coachSkin?'var(--cdInk)':'var(--ink)'}"><b>${label}</b> · ${c.txt.replace(/^(Laura|Coach Rebecca) /,'')}<div style="font-size:11px;color:${col}">${c.when}</div></div></div>`;
+}
+function scrMyTargets(){
+  const lc=lastChange();
+  return `${status()}<div class="scroll">
+  <div class="sheetHd"><button class="back" onclick="go('diary')">${I.back}</button><div style="font-weight:700;font-size:15px">My daily targets</div><div style="width:30px"></div></div>
+  <div class="sub" style="margin:8px 20px 14px">You and Coach Rebecca can both change these. The newest change is the one that counts, and the other person is told.</div>
+  <div class="card">
+   ${TFIELDS.map(([k,l,u,step])=>`<div class="qf"><label class="sub" style="color:var(--ink);font-weight:600">${l}</label><div style="display:flex;align-items:center;gap:8px"><div class="stepper"><button onclick="bump('t_${k}',-${step})">−</button></div><input id="t_${k}" inputmode="numeric" value="${T[k]}" style="width:72px"><div class="stepper"><button onclick="bump('t_${k}',${step})">+</button></div><span class="mute" style="font-size:11.5px;width:44px">${u}</span></div></div>`).join('')}
+  </div>
+  <div class="card" style="background:var(--boneSoft)"><div class="kicker">Last change</div>${changeRow(lc,false).replace('border-top:1px solid var(--lineSoft)','border-top:0')}</div>
+  <button class="cta" onclick="const n=saveTargets('me','t_');go('diary');setTimeout(()=>toast(n?'Saved · Coach Rebecca has been told':'No changes'),40)">Save my targets</button>
+  <div class="hint">Below 1,200 kcal we’ll ask you to check with your coach first.</div>
+  <div style="height:30px"></div></div><div class="toast"></div>`;
+}
+function bump(id,d){const el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d)}
+
 function scrHome(){
   return `${status()}<div class="scroll" style="bottom:78px">
   <div style="padding:14px 20px 4px"><div class="kicker">Saturday 17 October</div><div style="font-family:Fraunces,serif;font-weight:500;font-size:30px;letter-spacing:-.4px;margin-top:4px">Hey Laura,</div></div>
@@ -511,6 +544,7 @@ function scrCoachDetail(){
 
   <div class="cCard">
    <div class="cLbl" style="margin-bottom:6px">Needs a look</div>
+   ${(()=>{const c=S.tLog.find(x=>x.who==='me'&&!x.seen);return c?`<div class="flag"><div class="dot" style="background:var(--cdSageFill);color:var(--cdSage)">◎</div><div class="ft">Laura changed her targets<small>${c.txt.replace('Laura changed ','')} · ${c.when}</small></div><button class="nudge" onclick="S.tLog.forEach(x=>x.seen=true);S.coachScr='targets';render()">Review</button></div>`:''})()}
    <div class="flag"><div class="dot" style="background:#FAE1E9;color:#9B3B5A">!</div><div class="ft">Protein under 70% on Wednesday<small>61g of 110g · lowest day this week</small></div><button class="nudge" onclick="S.coachScr='note';render()">Message</button></div>
    <div class="flag"><div class="dot" style="background:#F3E7D8;color:#B06033">◐</div><div class="ft">Wednesday not sent<small>3 of 5 meals filled, never sent</small></div><button class="nudge" onclick="toast('Opens nudge composer (existing)')">Nudge</button></div>
    <div class="flag"><div class="dot" style="background:var(--cdBlueFill);color:var(--cdBlue)">💧</div><div class="ft">Water averaging 6.4 of 8<small>4 days under target</small></div><button class="nudge" onclick="toast('Opens nudge composer (existing)')">Nudge</button></div>
@@ -525,14 +559,15 @@ function scrCoachDetail(){
    ${SLOTS.map(([s,l])=>{const it=S.day[s];return `<div style="border-top:1px solid #F1ECE2;padding:10px 0 4px;margin-top:6px"><div style="display:flex;justify-content:space-between"><div style="font-weight:800;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--cdTan)">${l}</div><div style="font-size:12px;font-weight:700;color:var(--cdInk)">${it.length?sum(it,'k')+' kcal':'<span style="color:var(--cdMeta);font-weight:500">—</span>'}</div></div>
     ${it.map(x=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--cdBody);padding:3px 0"><span>${x.hl?'<b style="color:var(--cdTan)">●</b> ':''}${x.n}</span><span style="color:var(--cdMeta)">P ${x.p}g</span></div>`).join('')}
     ${S.photo[s]?'<div style="display:flex;gap:8px;align-items:center;margin-top:5px"><div class="ph" style="width:46px;height:46px"></div><span class="cMeta">Meal photo</span></div>':''}</div>`}).join('')}
-   <div style="display:flex;justify-content:space-between;border-top:1px solid #F1ECE2;padding-top:10px;margin-top:6px;font-size:12.5px;color:var(--cdBody)"><span>Water</span><b style="color:var(--cdInk)">${S.water} / 8 glasses</b></div>
+   <div style="display:flex;justify-content:space-between;border-top:1px solid #F1ECE2;padding-top:10px;margin-top:6px;font-size:12.5px;color:var(--cdBody)"><span>Water</span><b style="color:var(--cdInk)">${S.water} / ${T.water} glasses</b></div>
   </div>
   <button class="cBtn" onclick="S.coachScr='note';render()">Leave Laura a note on today</button>
   <button class="cBtn ghost" onclick="S.coachScr='targets';render()">Edit her targets</button>
   <div style="height:24px"></div></div>${coachTabs('Clients')}<div class="toast"></div>`;
 }
 function scrCoachList(){
-  const rows=[['LM','Laura M.','Sent today · 93% of target',['g','g','a','g','g','g',''],'',''],['DK','Dana K.','No log for 2 days',['g','g','g','','','',''],'2 days quiet','#FAE1E9;color:#9B3B5A'],['PS','Petra S.','Protein low 3 days running',['g','a','g','g','g','',''],'Low protein','#F3E7D8;color:#B06033'],['JR','Jana R.','Sent today · on track',['g','g','g','g','g','g',''],'',''],['MB','Mia B.','Day 3 of 7 · first week',['g','g','a','','','',''],'New','var(--cdBlueFill);color:var(--cdBlue)']];
+  const tChg=S.tLog.some(x=>x.who==='me'&&!x.seen);
+  const rows=[['LM','Laura M.','Sent today · 93% of target',['g','g','a','g','g','g',''],tChg?'New targets':'',tChg?'var(--cdSageFill);color:var(--cdSage)':''],['DK','Dana K.','No log for 2 days',['g','g','g','','','',''],'2 days quiet','#FAE1E9;color:#9B3B5A'],['PS','Petra S.','Protein low 3 days running',['g','a','g','g','g','',''],'Low protein','#F3E7D8;color:#B06033'],['JR','Jana R.','Sent today · on track',['g','g','g','g','g','g',''],'',''],['MB','Mia B.','Day 3 of 7 · first week',['g','g','a','','','',''],'New','var(--cdBlueFill);color:var(--cdBlue)']];
   return `${status()}<div class="scroll" style="bottom:78px">
   <div style="padding:10px 20px 4px"><div class="cTitle">Food logs</div><div class="cMeta" style="margin-top:2px">Your customers this week · tap one to open their Diary tab</div></div>
   <div style="display:flex;gap:8px;margin:12px 20px">${[['All',5,1],['Needs a look',2],['Sent today',2]].map(([l,n,on])=>`<div class="nudge" style="${on?'background:var(--cdNavy);color:#fff;border-color:var(--cdNavy)':''}">${l} ${n}</div>`).join('')}</div>
@@ -557,11 +592,11 @@ function scrCoachTargets(){
   <div class="hdr"><button class="back" onclick="S.coachScr='detail';render()">${I.back.replace('#1d2438','#0D2842')}</button><div></div></div>
   <div style="padding:6px 20px 12px"><div class="cTitle" style="font-size:21px">Laura’s daily targets</div><div class="cMeta">Lives on her meal plan (member_meal_plan) next to the protein goal you already set</div></div>
   <div class="cCard">
-   ${[['Calories','1600','kcal'],['Protein','110','g'],['Carbs','160','g'],['Fat','55','g'],['Water','8','glasses'],['Shakes','2','a day']].map(([l,v,u])=>`<div class="qf"><label style="font-size:13.5px;color:var(--cdInk);font-weight:600">${l}</label><div style="display:flex;align-items:center;gap:6px"><input value="${v}" style="width:76px;border-color:var(--cdBorder);background:var(--cdCream)"><span class="cMeta" style="width:46px">${u}</span></div></div>`).join('')}
+   ${TFIELDS.map(([k,l,u])=>`<div class="qf"><label style="font-size:13.5px;color:var(--cdInk);font-weight:600">${l}</label><div style="display:flex;align-items:center;gap:6px"><input id="ct_${k}" inputmode="numeric" value="${T[k]}" style="width:76px;border-color:var(--cdBorder);background:var(--cdCream)"><span class="cMeta" style="width:46px">${u}</span></div></div>`).join('')}
   </div>
-  <div class="cCard"><div class="qf" style="border:0;padding:0"><div><div style="font-weight:700;font-size:13.5px;color:var(--cdInk)">Show calories to Laura</div><div class="cMeta">Off = she sees protein, portions and water only</div></div><button onclick="S.targetsKcal=!S.targetsKcal;render()" style="width:46px;height:28px;border-radius:14px;background:${S.targetsKcal?'var(--cdSage)':'#D9D2C4'};position:relative"><i style="position:absolute;top:3px;${S.targetsKcal?'right:3px':'left:3px'};width:22px;height:22px;border-radius:11px;background:#fff"></i></button></div></div>
-  <button class="cBtn" onclick="S.coachScr='detail';render();setTimeout(()=>toast('Targets saved'),30)">Save targets</button>
-  <div class="cMeta" style="text-align:center;margin:10px 30px">Suggested from her goal and weight — you can always change them.</div>
+  <div class="cCard"><div class="cLbl" style="font-size:10px;margin-bottom:2px">Recent changes</div>${S.tLog.slice(0,4).map((c,i)=>changeRow(c,true).replace(i===0?'border-top:1px solid #F1ECE2':'@@',i===0?'border-top:0':'@@')).join('')}</div>
+  <button class="cBtn" onclick="const n=saveTargets('coach','ct_');S.coachScr='detail';render();setTimeout(()=>toast(n?'Saved · Laura has been told':'No changes'),30)">Save targets</button>
+  <div class="cMeta" style="text-align:center;margin:10px 30px">Laura can change these too. The newest change counts, and you get a notification when she makes one.</div>
   </div><div class="toast"></div>`;
 }
 
@@ -574,12 +609,13 @@ const CUST=[
  ['scan','Barcode scan','Camera → product → add'],
  ['quick','Quick add','Calories / macros by hand'],
  ['progress','Your week','Progress summary + coach note'],
+ ['mytargets','My targets  · NEW','She can edit too — coach is told'],
 ];
 const COACH=[
  ['list','Food logs (Home / Clients)','Who sent, who needs a look'],
  ['detail','Customer → Diary tab','Compliance, flags, the day in full'],
  ['note','Note on a day','Coach comment → customer push'],
- ['targets','Targets','Coach sets kcal / macros / water'],
+ ['targets','Targets  · UPDATED','Coach edits too + change history'],
 ];
 const NOTES={
  home:`<span class="tag">Customer app</span><h4>Today card</h4>The existing sage Food diary card on Home grows a mini ring and three quick buttons. <b>+ Shake</b> jumps straight to the Herbalife list.<ul><li>Everything else on Today stays as it is.</li><li>Still behind the AIW-039 gate (your 4 addresses + QA) until you say open.</li></ul>`,
@@ -591,7 +627,8 @@ const NOTES={
  progress:`<span class="tag">Customer app</span><h4>Your week</h4>Calories and protein against her targets, days sent, water, shakes and her weight change. The coach's latest note shows at the bottom so the loop feels personal.`,
  list:`<span class="tag">Coach app</span><h4>Food logs overview</h4>“It gets sent through”: one list of the coach's own customers with a 7-day mini strip and a badge when something needs attention (quiet 2+ days, protein low 3 days, new customer).<ul><li>Opens the existing customer screen on its <b>Diary</b> tab.</li><li>Only ever shows the coach's own customers — the database enforces it.</li></ul>`,
  note:`<span class="tag">Coach app</span><h4>Note on a day</h4>The coach leaves a short note on a day; the customer gets a push and sees it on her diary and Your week. Coaches can comment but can never edit the customer's food.`,
- targets:`<span class="tag">Coach app</span><h4>Targets</h4>Calorie, macro, water and shake targets per customer, stored next to the protein goal coaches already set. A toggle hides calories from customers who shouldn't count them (see Decisions).`,
+ targets:`<span class="tag">Coach app · updated</span><h4>Targets</h4>Calorie, protein, carb, fat and water targets per customer, stored next to the protein goal coaches already set.<ul><li><b>Your decision:</b> customers always see calories plus macros, so the “hide calories” switch is gone.</li><li><b>Both can edit.</b> The newest change counts. When Laura changes hers, the coach gets a push and a “Laura changed her targets” flag on the Diary tab with a <b>Review</b> button.</li><li><b>Recent changes</b> shows who changed what and when, so nothing changes silently.</li></ul><i>Try it:</i> change a target on the customer's My targets screen, then open the coach Diary tab.`,
+ mytargets:`<span class="tag">Customer app · new</span><h4>My targets</h4>Opened from <b>Targets ›</b> on the diary summary card.<ul><li>She can change calories, protein, carbs, fat and water herself.</li><li>The <b>newest change counts</b>, whoever made it. Her coach gets a notification and sees exactly what changed.</li><li>When the coach changes them, she gets a push and the “Last change” line shows it.</li><li>Below 1,200 kcal she's asked to check with her coach first (a prompt, not a block — see the plan).</li></ul>`,
 };
 function rail(){
   const L=S.mode==='customer'?CUST:COACH,cur=S.mode==='customer'?S.scr:S.coachScr;
@@ -623,9 +660,10 @@ const PLAN=`<div class="doc">
 <tr><td><code>member_custom_foods</code></td><td>Foods a customer creates or saves; “My meals” as a jsonb item list.</td><td>Customer only.</td></tr>
 <tr><td><code>member_food_favourites</code></td><td><code>(member_id, food_id)</code>. “Recent” comes from entries, no table.</td><td>Customer only.</td></tr>
 <tr><td><code>food_day_notes</code></td><td>Coach note on a day: <code>member_id, date, coach_id, body, read_at</code>.</td><td>Coach writes for own customers; customer reads own + marks read.</td></tr>
-<tr><td><code>member_meal_plan</code> (extend)</td><td>Add <code>kcal_goal, carbs_goal_g, fat_goal_g, water_goal, shakes_goal, show_kcal</code> next to existing <code>protein_goal_g</code>.</td><td>As today: customer reads, coach edits.</td></tr>
+<tr><td><code>member_meal_plan</code> (extend)</td><td>Add <code>kcal_goal, carbs_goal_g, fat_goal_g, water_goal, shakes_goal</code> next to existing <code>protein_goal_g</code>, plus <code>targets_updated_at</code> and <code>targets_updated_by</code> (who made the last change).</td><td>Customer reads; <b>both</b> coach and customer change targets, only through <code>set_nutrition_targets()</code> (section 3b).</td></tr>
+<tr><td><code>nutrition_target_changes</code></td><td>History: <code>member_id, changed_by, role</code> (customer / coach), <code>old</code> and <code>new</code> jsonb, <code>changed_at</code>, <code>seen_at</code>. Powers “Recent changes”, “Last change” and the coach's flag.</td><td>Insert only via the function. Customer reads own; coach reads own customers.</td></tr>
 </table>
-<p>Plus a view <code>food_log_day_totals</code> (sum per member per day) and a function <code>coach_food_flags()</code> that returns the “Needs a look” list for the calling coach only (quiet ≥2 days, protein &lt;70% of goal ≥3 days, unsent partial day, water under goal ≥4 days). Flags are worked out when asked, not stored, so they can't go stale.</p>
+<p>Plus a view <code>food_log_day_totals</code> (sum per member per day) and a function <code>coach_food_flags()</code> that returns the “Needs a look” list for the calling coach only (quiet ≥2 days, protein &lt;70% of goal ≥3 days, unsent partial day, water under goal ≥4 days, customer changed her targets and the coach hasn't looked yet). Flags are worked out when asked, not stored, so they can't go stale.</p>
 <p><b>Why snapshot macros on the entry?</b> If a food's values are corrected later, a customer's past days (and what her coach saw) must not change underneath her.</p>
 
 <h3>3. Row-level security (sketch)</h3>
@@ -668,6 +706,18 @@ create policy "meal_photos_coach" on storage.objects for select
 </table>
 <div class="rec"><b>Recommendation — start free:</b> (1) seed <code>foods</code> with our Herbalife catalogue + a one-off USDA import of everyday foods; (2) barcode scans go to an edge function <code>food-barcode</code> that checks <code>foods</code> first, then Open Food Facts, and saves what it finds; (3) search is a Postgres function <code>search_foods(q, country)</code> with a trigram index — fast, and no rate limits. Look at FatSecret Premier only if customers say search is missing things.</div>
 
+<h3>4b. Targets: both can edit — how conflicts work</h3>
+<p><b>Your decision (13 Oct):</b> customers see calories and macros; the coach and the customer can both set targets.</p>
+<div class="rec"><b>Rule: the newest change counts, and the other person is always told.</b> Nobody “owns” the targets, and nothing is locked.</div>
+<ol>
+<li><b>One way in.</b> Both apps save through one database function, <code>set_nutrition_targets(member_id, values, expected_updated_at)</code>. It checks the caller is the customer herself (<code>member_id = auth.uid()</code>) or her coach (<code>is_my_member()</code>), saves, stamps <code>targets_updated_by/at</code> and writes a <code>nutrition_target_changes</code> row with before and after. The app can't write the columns directly, so the history can't be skipped. This also stops a customer editing anything else on her meal plan.</li>
+<li><b>No silent overwrites.</b> The app sends the <code>targets_updated_at</code> it loaded. If the other person saved in between, the function refuses and the app shows “Coach Rebecca changed these 2 minutes ago — here's what she set” with <b>Keep hers</b> / <b>Use mine</b>. Picking “Use mine” is a new change, so the coach is told as normal. (This only matters if both edit within the same few minutes.)</li>
+<li><b>Who gets told.</b> Customer changes → push to the coach (“Laura changed her targets: protein 110 → 120g”) and a flag on the Diary tab until the coach opens it. Coach changes → push to the customer and a green “Coach Rebecca updated your targets” card on her diary. Both added to the existing notification catalogue, using the same test-account guard.</li>
+<li><b>Field by field.</b> A change only touches the numbers that actually changed, so a customer editing water doesn't undo the coach's protein change from yesterday.</li>
+<li><b>Safety floor.</b> Below 1,200 kcal (or protein under 50 g) the customer is asked to check with her coach first. It's a prompt, not a block, and the coach's push says “below the usual floor”. The numbers are placeholders for you to set.</li>
+<li><b>Past days don't move.</b> Each sent day keeps the targets it was judged against (copied into a new <code>food_logs.targets_snapshot</code> jsonb when sent), so a new target never turns last week's green days amber.</li>
+</ol>
+
 <h3>5. How “it gets sent through”</h3>
 <ol>
 <li>Customer adds foods → rows in <code>food_log_entries</code> (autosave, no push).</li>
@@ -690,10 +740,10 @@ create policy "meal_photos_coach" on storage.objects for select
 
 const DECIDE=`<div class="doc">
 <h2>Decisions for you</h2>
-<p class="mute" style="color:#9c9787">Five yes/no style calls before anything is built. My suggestion is in brackets.</p>
+<p class="mute" style="color:#9c9787">1 and 2 are decided and already in the design. 3–5 are still open, and nothing gets built until they're answered. My suggestion is in brackets.</p>
 <ol class="dec">
-<li><b>Should customers see calories?</b> Some coaches prefer protein, portions and shakes over counting calories. Options: everyone sees calories / nobody does / <b>the coach chooses per customer</b> (my suggestion — it's the toggle on the coach Targets screen).</li>
-<li><b>Who sets targets?</b> The coach types them in, or the app suggests them from goal + weight and the coach adjusts. <i>(Suggest, coach confirms.)</i></li>
+<li style="background:#E7EFE6;border-color:#CBDDCC"><b>Should customers see calories? — DECIDED 13 Oct.</b> Yes: calories plus protein, carbs and fat for everyone. The coach's “hide calories” switch has been removed from the design.<br><i style="color:#5a7a5e">“They probably should see calories too.”</i></li>
+<li style="background:#E7EFE6;border-color:#CBDDCC"><b>Who sets targets? — DECIDED 13 Oct.</b> Both the coach and the customer. <b>The newest change counts and the other person is always told</b>: the coach gets a push and a “changed her targets” flag, the customer gets a push and a card on her diary. Both screens show who changed what. If both edit within the same few minutes, the second person sees the first person's numbers and chooses. Full rules are in the Back-end plan, section 4b. Open for you: the low-calorie prompt floor (placeholder 1,200 kcal / 50 g protein).<br><i style="color:#5a7a5e">“I think both can. The coach and the customer.”</i></li>
 <li><b>Typing vs food search for the 7-day onboarding diary.</b> Replace the free-text boxes with food search, or keep a “just type it” option for brand-new customers. <i>(Keep both: search by default, a “type it instead” link per meal.)</i></li>
 <li><b>Food database:</b> free stack (Herbalife list + USDA + Open Food Facts), or pay for FatSecret/Nutritionix from day one. <i>(Free first; review after a month of real use.)</i></li>
 <li><b>Who gets it first?</b> It stays on your own accounts (as the food diary is now, AIW-039) until you say open it to all customers. <i>(Your accounts → a few test customers → everyone.)</i></li>
@@ -704,7 +754,7 @@ const DECIDE=`<div class="doc">
 /* ═══════════════════════ RENDER ═══════════════════════ */
 function go(s){S.scr=s;render();const sc=document.getElementById('sc')||document.querySelector('.scroll');if(sc)sc.scrollTop=0}
 function phoneHtml(){
-  if(S.mode==='customer') return ({home:scrHome,diary:scrDiary,add:scrAdd,detail:scrDetail,scan:scrScan,quick:scrQuick,progress:scrProgress})[S.scr]();
+  if(S.mode==='customer') return ({home:scrHome,diary:scrDiary,add:scrAdd,detail:scrDetail,scan:scrScan,quick:scrQuick,progress:scrProgress,mytargets:scrMyTargets})[S.scr]();
   return ({list:scrCoachList,detail:scrCoachDetail,note:scrCoachNote,targets:scrCoachTargets})[S.coachScr]();
 }
 function render(){
