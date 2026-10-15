@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your first days: German + Slovenian copy check (AIW-123)</title>
+<style>
+:root{--ink:#2b2a28;--mute:#77716a;--line:#e6e1da;--bg:#faf8f5;--ok:#4f7a5a;--warn:#b5651d;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 16px}
+.badge{display:inline-block;background:#fff3e6;color:var(--warn);border:1px solid #f0d2b0;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.ask{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+.ask b{display:block;margin-bottom:4px}
+h2{font-size:16px;margin:26px 0 8px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden}
+.key{font:12px ui-monospace,monospace;color:var(--mute);padding:8px 14px;border-bottom:1px solid var(--line);background:#fcfbf9}
+.cols{display:grid;grid-template-columns:repeat(3,1fr)}
+.cols>div{padding:10px 14px;border-right:1px solid var(--line)}.cols>div:last-child{border-right:0}
+.lang{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;margin-bottom:2px}
+.flag{border-top:1px dashed #f0d2b0;background:#fffaf4;padding:10px 14px;font-size:14px}
+.flag .lang{color:var(--warn)}
+.new{color:var(--ok);font-weight:600}
+del{color:#a3483a}
+@media(max-width:700px){.cols{grid-template-columns:1fr}.cols>div{border-right:0;border-bottom:1px solid var(--line)}}
+</style></head><body><div class="wrap">
+<span class="badge">Needs your approval</span>
+<h1>Your first days: German and Slovenian, in your voice</h1>
+<p class="sub">AIW-123 · design only, nothing changed in the app · 14 Oct 2026</p>
+
+<div class="ask"><b>What I need from you</b>
+Read the German and Slovenian next to your English below. Reply "yes" to keep them, or send edits. The five orange notes are changes I'd suggest; say yes or no to each.</div>
+
+<div class="ask"><b>Why this is here</b>
+On 22 Sep you said not to translate these screens yet. On 25 Sep (v141) they were translated anyway, and nothing records you approving that. No customer has seen them: the whole first-days flow is still only visible to your accounts and the QA account. Your English hasn't changed. If you'd rather go back to English-only until launch, say so.</div>
+
+<h2>Welcome</h2>
+<div id="rows"></div>
+
+<h2>Small things outside your-voice copy (spotted while checking)</h2>
+<div class="row"><div class="key">firstDays.why.sub (German)</div>
+<div class="flag"><div class="lang">Suggested change</div>Your English says "One line" in both places. The German says "Eine Zeile" on the checklist but "Ein Satz" (one sentence) on the pop-up. Make both <span class="new">Eine Zeile</span>.</div></div>
+<div class="row"><div class="key">firstDays.cta.arrivedNoNumber (Slovenian)</div>
+<div class="flag"><div class="lang">Suggested change</div>"zato <del>mu</del> piši" uses "him" for the coach. Change it to <span class="new">zato trenerju piši</span>, which matches the "Takoj piši svojemu trenerju" heading.</div></div>
+<div class="row"><div class="key">Slovenian word for coach</div>
+<div class="flag"><div class="lang">Your call</div>Three words are mixed: <i>trener</i> (when your products arrive), <i>coach</i> (what happens next) and <i>coachem</i> (how to reach them). Pick one and I'll use it everywhere. I'd suggest <b>trener</b>.</div></div>
+</div>
+<script>
+const R=[
+['Welcome','firstDays.hero.kicker','Welcome to results','Willkommen zu Ergebnissen','Dobrodošli k rezultatom',
+ ['German','"Willkommen zu Ergebnissen" is a word-for-word translation and reads stiffly. Suggest: <span class="new">Willkommen bei deinen Ergebnissen</span>.'],
+ ['Slovenian (no change suggested)','"Dobrodošli" is the plural/formal form, while everything else says <i>ti</i>. That\'s deliberate: the singular (dobrodošel / dobrodošla) would make the reader male or female.']],
+['Welcome','firstDays.hero.h1','Your first steps','Deine ersten Schritte','Tvoji prvi koraki'],
+['Welcome','firstDays.hero.lead','Your products are on their way. Here is how to get yourself ready while you wait.','Deine Produkte sind unterwegs. So bereitest du dich vor, während du wartest.','Tvoji izdelki so na poti. Tukaj je, kako se pripraviš med čakanjem.'],
+['Five prep steps','firstDays.prep.photo.t','Take your starting photo','Mach dein Startfoto','Naredi začetno fotografijo'],
+['Five prep steps','firstDays.prep.photo.s','Front on, same spot, same light. It might feel uncomfortable — everyone is glad they took it.','Von vorn, gleiche Stelle, gleiches Licht. Vielleicht fühlt es sich unangenehm an — am Ende sind alle froh, dass sie es gemacht haben.','Od spredaj, isto mesto, ista svetloba. Morda ti je nerodno — a vsi so veseli, da imajo to fotografijo.'],
+['Five prep steps','firstDays.prep.weight.t','Set your starting weight','Trag dein Startgewicht ein','Vnesi začetno težo'],
+['Five prep steps','firstDays.prep.weight.s','First thing in the morning, before breakfast. That is your baseline.','Morgens als Erstes, vor dem Frühstück. Das ist dein Ausgangspunkt.','Zjutraj takoj po vstajanju, pred zajtrkom. To je tvoja izhodiščna točka.'],
+['Five prep steps','firstDays.prep.pantry.t','Clear out the pantry','Räum die Vorratskammer aus','Počisti shrambo'],
+['Five prep steps','firstDays.prep.pantry.s','Bin what you know will not help. If it is not in the house you do not have to fight it at 9pm.','Wirf weg, was dir nicht hilft. Was nicht im Haus ist, musst du abends um neun auch nicht bekämpfen.','Vrzi proč, kar ti ne koristi. Če tega ni doma, se ob devetih zvečer ni treba boriti s tem.'],
+['Five prep steps','firstDays.prep.shop.t','Do one shop','Geh einmal einkaufen','Pojdi enkrat po nakupih'],
+['Five prep steps','firstDays.prep.shop.s','Fruit, veg, protein, and something you actually like. Make the good choice the easy one.','Obst, Gemüse, Eiweiß — und etwas, das dir wirklich schmeckt. Mach die gute Wahl zur einfachen.','Sadje, zelenjava, beljakovine in nekaj, kar ti je res všeč. Naj bo dobra izbira tudi najlažja.'],
+['Five prep steps','firstDays.prep.why.t','Write down your why','Schreib dein Warum auf','Zapiši svoj zakaj'],
+['Five prep steps','firstDays.prep.why.s','One line. Not "lose weight" — the real reason underneath it. Put it where you will see it.','Eine Zeile. Nicht „abnehmen“ — der echte Grund darunter. Leg sie dorthin, wo du sie siehst.','Ena vrstica. Ne „shujšati“ — pravi razlog pod tem. Postavi ga tja, kjer ti bo na očeh.'],
+['When your products arrive','firstDays.warm.kicker','When your Herbalife products arrive','Wenn deine Herbalife-Produkte ankommen','Ko prispejo tvoji izdelki Herbalife'],
+['When your products arrive','firstDays.warm.title','Text your coach straight away','Schreib deinem Coach sofort','Takoj piši svojemu trenerju'],
+['When your products arrive','firstDays.warm.body','Do not start on your own. They will book you in, walk you through your plan, and start your days properly.','Fang nicht allein an. Ihr macht einen Termin aus, geht deinen Plan zusammen durch und startet deine Tage richtig.','Ne začni na svojo roko. Skupaj se dogovorita za termin, pregledata tvoj načrt in pravilno začneta tvoje dni.',
+ ['Both (no change suggested)','Both read "you and your coach do this together" rather than "they will do it for you". That keeps the coach\'s gender out of the sentence, and it\'s close to what you meant.']],
+['What happens next','firstDays.lock.kicker','What happens next','Wie es weitergeht','Kaj sledi'],
+['What happens next','firstDays.lock.body','Once you have jumped on your call, your coach will send you your meal plan and we will get your account activated to start your first seven day challenge.','Sobald du dein Gespräch hattest, schickt dir dein Coach deinen Ernährungsplan und wir schalten dein Konto frei, damit du deine erste Sieben-Tage-Challenge starten kannst.','Ko opraviš klic, ti bo tvoj coach poslal načrt prehrane, mi pa ti aktiviramo račun, da začneš svoj prvi sedemdnevni izziv.',
+ ['Slovenian','"ti bo tvoj coach <del>poslal</del>" makes the coach male, which breaks the no-gender rule used everywhere else in this flow. Suggest the present tense: <span class="new">Ko opraviš klic, ti trener pošlje načrt prehrane, mi pa ti aktiviramo račun, da začneš svoj prvi sedemdnevni izziv.</span>']],
+];
+let last='',h='';
+for(const r of R){
+ if(r[0]!==last&&last!==''){h+='<h2>'+r[0]+'</h2>'}
+ last=r[0];
+ h+='<div class="row"><div class="key">'+r[1]+'</div><div class="cols"><div><div class="lang">Your English</div>'+r[2]+'</div><div><div class="lang">German</div>'+r[3]+'</div><div><div class="lang">Slovenian</div>'+r[4]+'</div></div>';
+ for(const f of r.slice(5)){h+='<div class="flag"><div class="lang">'+(f[0].includes('no change')?f[0]:'Suggested change · '+f[0])+'</div>'+f[1]+'</div>'}
+ h+='</div>';
+}
+document.getElementById('rows').innerHTML=h;
+</script></body></html>
